@@ -4,7 +4,7 @@ LUA Part for nCX Server mod
 * Rewritten all Lua entity scripts for optimal performance
 * One file for each GameRule
 * OnUpdate functions replaced with OnTimer (each sec) or moved to C++
-* Entity scripts and xmls support modding without affecting sv_cheatprotection
+* Entity scripts and xmls modding support without affecting sv_cheatprotection
 * Includes LUA mod extension (CryMP) for nCX_Server.dll
 * New entity ServerTrigger (super fast) replaces previous ProximityTrigger
 * Removed pregame
