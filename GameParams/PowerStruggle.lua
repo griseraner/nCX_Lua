@@ -3,7 +3,7 @@
 --        ## ##    ## ##   ##  ## ##	Crysis nCX
 --        ##  ##   ## ##        ###
 --        ##   ##  ## ##        ###      Authors:  ctaoistrach and Arcziy
---        ##    ## ## ##   ##  ## ##     Version:  2.0 7Ox Edition
+--        ##    ## ## ##   ##  ## ##     Version:  3.0 
 --        ##     ####  #####  ##   ##    LastEdit: 2013-01-10
 -- *****************************************************************
 
@@ -49,17 +49,7 @@ PowerStruggle = {
 		Perimeter = {},
 		Turret = {},
 	},
-	--[[
-	rankList = {
-		{ name="@ui_short_rank_1", desc="@ui_rank_1", short="0",   cp=0, 	min_pp=300,	},
-		{ name="@ui_short_rank_2", desc="@ui_rank_2", short="PVT", cp=25,   min_pp=350,	},
-		{ name="@ui_short_rank_3", desc="@ui_rank_3", short="SGT", cp=75,   min_pp=400,	},
-		{ name="@ui_short_rank_4", desc="@ui_rank_4", short="LT",  cp=150,  min_pp=500,	},
-		{ name="@ui_short_rank_5", desc="@ui_rank_5", short="CPT", cp=400,  min_pp=800,	},
-		{ name="@ui_short_rank_6", desc="@ui_rank_6", short="MAJ", cp=700,  min_pp=1000,},
-		{ name="@ui_short_rank_7", desc="@ui_rank_7", short="COL", cp=1000, min_pp=1350, limit=3,},
-		{ name="@ui_short_rank_8", desc="@ui_rank_8", short="GEN", cp=1500, min_pp=1800, limit=2,},
-	};]]
+	-- def C1
 	rankList = {
 		{ name="@ui_short_rank_1", desc="@ui_rank_1", short="0",   cp=0, 	min_pp=100,	},
 		{ name="@ui_short_rank_2", desc="@ui_rank_2", short="PVT", cp=25,   min_pp=200,	},
@@ -133,34 +123,14 @@ PowerStruggle = {
 			nCX.Spawned = {};
 			nCX.FirstBlood = false;
 			self:Reset(); 
-			System.SetCVar("sv_servername", "7OXICiTY ~ PS ~ "..nCX.GetCurrentLevel():sub(16, -1):upper());
-			--[[
-			local tmp = {};
-			for i, v in pairs(System.GetEntities()) do
-				tmp[v.class] = true;
-			end
-			local i = 0;
-			for class, v in pairs(tmp) do
-				i = i + 1;
-				CryMP:SetTimer(20 + (i * 2), function()
-					local up, down = nCX.GetServerNetworkUsage();
-					System.LogAlways("Server Network Usage -> Up "..string:mspace(8, up).." k/s | Down "..string:mspace(8, down).." k/s");
-					local prev = #System.GetEntitiesByClass(class);
-					for i, s in pairs(System.GetEntitiesByClass(class)) do
-						System.RemoveEntity(s.id);
-					end
-					local curr = #System.GetEntitiesByClass(class);
-					if (curr < prev) then
-						System.LogAlways(" >  Removed "..curr.." "..class);
-					end
-				end);
-			end
-			]]
 			nCX.GameEnd = false;
 			local time = tonumber(System.GetCVar("g_timelimit"));
 			if (time < 30) then
 				System.SetCVar("g_timelimit 120")
 			end
+
+			--7Ox: SET SERVER NAME ACCORDING TO MAP NAME
+			System.SetCVar("sv_servername", "7OXICiTY ~ PS ~ "..nCX.GetCurrentLevel():sub(16, -1):upper());
 
 		end,
 		PreGame = {},
@@ -178,21 +148,6 @@ PowerStruggle = {
 				if (CryMP and CryMP.OnUpdate) then
 					CryMP:OnUpdate(frameTime);
 				end
-				--[[
-			    --Animation Hard --THIS IS EPIC code don't change it=.=
-				local powerFallback = self.powerFallback;
-				if (powerFallback) then
-					local teamId = powerFallback[1];
-					powerFallback[2] = powerFallback[2] - (15 * frameTime);
-				    local rounded = math.floor(powerFallback[2]);
-					if (rounded ~= powerFallback[4]) then
-						nCX.SetSynchedGlobalValue(300 + teamId, rounded);
-					    powerFallback[4] = rounded;
-						if (rounded <= powerFallback[3]) then
-							self.powerFallback = nil;
-						end
-					end
-				end]]
 			end
 		},
 		---------------------------
@@ -215,13 +170,7 @@ PowerStruggle = {
 		---------------------------
 		OnClientConnect = function(self, player, channelId, reset, nomad)
 			if (not reset) then
-				--nCX.ChangeSpectatorMode(player.id, 2, NULL_ENTITY); --now c++
-				--local factory = self.factories and self.factories[1];
-				--if (factory) then
-				--	for vehicleId, v in pairs(self.vehicleBuyZones) do		-- no vehicle Buyzone fix for newly connected players
-						--factory.onClient:ClSetBuyFlags(channelId, vehicleId, 13);
-				--	end
-				--end
+
 			else
 				--nCX.Spawned[channelId] = nil;
 				local teamId = nCX.GetChannelTeam(channelId) or 0;
@@ -235,7 +184,6 @@ PowerStruggle = {
 					self.Server.RequestSpawnGroup(self, player.id, nCX.GetTeamDefaultSpawnGroup(teamId) or NULL_ENTITY, true);
 					self:RevivePlayer(player);
 				else
-					--self.Server.OnChangeSpectatorMode(self, player, specMode, nil, true);
 					nCX.OnChangeSpectatorMode(player.id, specMode, NULL_ENTITY, true, false);
 				end
 				if (not nCX.Refresh) then  -- keep the scores for Refresh :)
@@ -304,9 +252,6 @@ PowerStruggle = {
 		--	OnClientEnteredGame
 		---------------------------
 		OnClientEnteredGame = function(self, channelId, player, reset)
-			if (not reset) then
-				--nCX.ChangeSpectatorMode(player.id, 1, NULL_ENTITY); --now c++
-			end
 			self:SetPlayerPP(player.id, 100);
 			if (self.inBuyZone[player.id]) then
 				for zoneId, yes in pairs(self.inBuyZone[player.id]) do
@@ -340,67 +285,21 @@ PowerStruggle = {
 			for ammo, capacity in pairs(ammoCapacity) do
 				player.inventory:SetAmmoCapacity(ammo, capacity);
 			end
-			--[[
-			CryMP:SetTimer(3, function()
-				CryMP:HandleEvent("OnConnect", {channelId, player, player.Info.ID, reset});
-				if (not reset) then
-					local restored = (nCX.GetSynchedEntityValue(player.id, 100) or 0) > 0;
-					local name = player:GetName();
-					local CC = player.Info.Country_Short;
-					if (not player:IsNomad() and CC ~= "EU") then
-						name = name.." ("..CC..")";
-					end
-					name = player:GetAccess() > 0 and "Premium "..name or name;
-					self.otherClients:ClClientConnect(channelId, name, restored);
-				end
-			end);]]
 		end,
 		---------------------------
-		--	OnChangeSpectatorMode		--changed 07.05
+		--	OnChangeSpectatorMode		
 		---------------------------
 		OnChangeSpectatorMode = function(self, player, mode, targetId, reset, norevive)
 			local playerId = player.id;
 			if (mode > 0) then
 				self:CancelCapturing(player);
 				if (reset) then  -- going to spec team 0
-					--local quit = CryMP:HandleEvent("OnChangeSpectatorMode", {player});
-					--if (quit) then
-					--	return;
-					--end
-					--player.inventory:Destroy();
-					--if (mode == 1 or mode == 2) then
-					--	nCX.SetTeam(0, playerId);
-					--end
 					if (self.reviveQueue[playerId]) then
 						self.onClient:ClReviveCycle(player.Info.Channel, false);
 						self.reviveQueue[playerId] = nil;
 					end
 				end
-				if (mode == 3) then
-					--if (targetId and targetId ~= 0) then
-					--	player.actor:SetSpectatorMode(mode, targetId);
-					--else
-					--	local newTargetId = nCX.GetNextSpectatorTarget(playerId, 1);
-					--	if (newTargetId and newTargetId~=0) then
-					--		player.actor:SetSpectatorMode(mode, newTargetId);
-					--	else
-					--		mode = 1;
-					--		nCX.SetTeam(0, playerId);
-					--	end
-					--end
-				end
-				if (mode == 1 or mode == 2) then
-					--player.actor:SetSpectatorMode(mode, NULL_ENTITY);
-					--local locationId = nCX.GetRandomSpectatorLocation();
-					--if (locationId) then
-					--	local location = System.GetEntity(locationId);
-					--	if (location) then
-					--		nCX.MovePlayer(playerId, location:GetWorldPos(), location:GetWorldAngles());
-					--	end
-					--end
-				end
 			elseif (not norevive) then
-				--player.actor:SetSpectatorMode(mode, NULL_ENTITY);
 				self:RevivePlayer(player);
 			end
 			self.channelSpectatorMode[player.Info.Channel] = mode;
@@ -415,9 +314,6 @@ PowerStruggle = {
 					local quit = CryMP:HandleEvent("OnRequestRevive", {player});
 					if (not quit and not nCX.IsNeutral(playerId)) then  
 						if (player.actor:GetSpectatorMode() == 3) or (player.actor:IsDead()) then --IsDead now checks health and phys profile	--and (player.actor:GetDeathTimeElapsed() > 2.5 or player.suicided--[[ or quit == false]])) then
-							--if (nCX.Count(self.reviveQueue) == 0) then
-							--	nCX.ResetReviveCycleTime();
-							--end
 							self:QueueRevive(player, true);
 							player.suicided = nil;
 						end
@@ -922,7 +818,7 @@ PowerStruggle = {
 			self.allClients:ClWorkComplete(targetId, work_type);
 		end,
 		---------------------------
-		--		OnReviveCycleFinished		
+		--		OnReviveCycleFinished -- called from C++
 		---------------------------
 		OnReviveCycleFinished = function(self)
 			for playerId, revive in pairs(self.reviveQueue) do
