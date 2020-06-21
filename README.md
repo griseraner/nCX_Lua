@@ -7,6 +7,7 @@ LUA Part for nCX Server mod
 * Entity scripts and xmls modding support without affecting sv_cheatprotection
 * Includes LUA mod extension (CryMP) for nCX_Server.dll
 * New entity ServerTrigger (super fast) replaces previous ProximityTrigger
+* Request revive reacts without delay
 * Removed pregame
 
 Fixes:
