@@ -347,7 +347,7 @@ Door = {
 			math:CopyVector(self.goalAngle, self.modelAngle); 
 		end
 		self.scp:RotateToAngles(self.goalAngle, self.scp:GetAngularSpeed(), rotation.fSpeed, rotation.fAcceleration, rotation.fStopTime);
-		System.LogAlways("Rotating to "..self.goalAngle.x.." | "..self.goalAngle.y.." | "..self.goalAngle.z.." ");
+		--System.LogAlways("Rotating to "..self.goalAngle.x.." | "..self.goalAngle.y.." | "..self.goalAngle.z.." ");
 		self.bNeedReload = 1;
 	end,
 	---------------------------

@@ -327,7 +327,7 @@ DestroyableObject = {
 	PhysicalizeThis = function(self, nSlot )
 		local Physics = self.Properties.Physics;
 		self.Properties.Physics.Mass = 60; 
-		System.LogAlways(self:GetName().." | mass "..self.Properties.Physics.Mass);
+		--System.LogAlways(self:GetName().." | mass "..self.Properties.Physics.Mass);
 		EntityCommon.PhysicalizeRigid( self,nSlot,Physics,self.bRigidBodyActive );
 	end,
 	---------------------------
