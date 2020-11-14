@@ -64,7 +64,7 @@
 		<param name="effect" value="muzzleflash.LAM.grenade_white" />
 	</trail>
 	<params>
-		<param name="lifetime" value="3.5" /> <!--2.5-->
+		<param name="lifetime" value="2.5" /> 
 		<param name="showtime" value="0.05" />
 		<param name="aitype"	value="grenade" />
 		<param name="turretDetectable" value="1"/>

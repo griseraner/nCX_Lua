@@ -82,12 +82,11 @@ CryMP = {
 		local main = nCX.ROOT.."Game/Server/nCX/";
 		
 		local old = nCX.ROOT:reverse();
-		local n = old:find("\\", 2);
+		local n = old:find("/", 2);
 		local new = old:sub(n);
 		local new = new:reverse().."GlobalData/";--lol
-		
 		nCX.SetGlobalPath(new);
-		
+
 		self.Paths = {
 			ROOT = main,
 			ServerData = main.."ServerData/",

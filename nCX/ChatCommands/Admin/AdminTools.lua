@@ -208,7 +208,7 @@ CryMP.ChatCommands:Add("god", {
 );	
 --objects/library/lights/flare.cgf  equipment/lights.signal_flare1
 --==============================================================================
---!GOD
+--!CRAZYOBJECT
 CryMP.ChatCommands:Add("crazyobject", {
 		Access = 3, 
 		Args = {
@@ -232,6 +232,33 @@ CryMP.ChatCommands:Add("crazyobject", {
 		return true; 
 	end
 );	
+
+--==============================================================================
+--!CRAZYWEAPON
+CryMP.ChatCommands:Add("crazyweapon", {
+		Access = 3, 
+		Args = {
+			{"mode", Number = true,},
+			{"player", GetPlayer = true, Optional = true,},
+		}, 
+		Info = "shoot crazy missiles of your weapon", 
+	}, 
+	function(self, player, channelId, mode, target)
+		local goal = target or player;
+		if (not mode or mode == 0) then
+			CryMP.Msg.Chat:ToPlayer(channelId, "CRAZY-WEAPON [ OFF ] ::: "..goal:GetName());
+			self:Log(CryMP.Users:GetMask(player.Info.ID).." "..goal:GetName().." crazy-weapon disabled on "..(player.id==goal.id and "themselves" or goal:GetName()));
+			goal.actor:SetCrazyWeapon(0);
+		else
+			CryMP.Msg.Chat:ToPlayer(channelId, "CRAZY-WEAPON [ "..mode.." ] ::: "..goal:GetName());
+			self:Log(CryMP.Users:GetMask(player.Info.ID).." "..goal:GetName().." crazy-weapon enabled ("..mode..") on "..(player.id==goal.id and "themselves" or goal:GetName()));
+			goal.actor:SetCrazyWeapon(mode);
+			nCX.GiveItem("SOCOM", channelId, false, false);
+		end
+		return true; 
+	end
+);	
+
 
 --==============================================================================
 --!EXEC
@@ -378,13 +405,13 @@ CryMP.ChatCommands:Add("tag", {
 			return false, "target is spectating";
 		end
 		if (self.Tagged[target.id]) then
-			nCX.RemoveMinimapEntity(player.id);
+			nCX.RemoveMinimapEntity(target.id);
 			CryMP.Msg.Chat:ToPlayer(channelId, "UN-TAGGED ::: "..target:GetName());
 			self:Log(CryMP.Users:GetMask(player.Info.ID).." "..player:GetName().." untagged "..target:GetName());
 			self.Tagged[target.id] = nil;
 		else
 			local channel = target.Info.Channel;
-			nCX.AddMinimapEntity(player.id, 2, 0);
+			nCX.AddMinimapEntity(target.id, 2, 0);
 			local ping = nCX.GetPing(channel);
 			CryMP.Msg.Chat:ToPlayer(channelId, "TAGGED ::: ("..target:GetName()..", Ping: "..ping..", Channel: "..channel..")");
 			self:Log(CryMP.Users:GetMask(player.Info.ID).." "..player:GetName().." tagged "..target:GetName(), true);

@@ -38,7 +38,7 @@ CryMP.ChatCommands:Add("ingame", {
 				else
 					g_gameRules:AutoAssignTeam(spectatorId);
 					if (g_gameRules.class == "PowerStruggle") then
-						g_gameRules:QueueRevive(spectatorId);
+						g_gameRules:QueueRevive(spectator);
 					else
 						g_gameRules:RevivePlayer(spectator);
 					end

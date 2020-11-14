@@ -283,9 +283,12 @@ local tbl = {
 			end
 			local pp = System.GetEntitiesByClass("DebugGun") or {};
 			for i, p in pairs(pp) do p.item:Select(false); end
-			if (tonumber(System.GetCVar("cl_bob")) ~= 1) then
+			if (tonumber(System.GetCVar("cl_bob"))~=1)then
 				System.SetCVar("cl_bob","1");
 			end
+			if (tonumber(System.GetCVar("g_enableAlternateIronSight"))~=1) then
+				System.SetCVar("g_enableAlternateIronSight","1");
+			end 
 		end		
 	]],
 	
@@ -308,7 +311,7 @@ local tbl = {
 				if (not pos) then
 					return;
 				end
-				local sec=enable==17 and "misc.static_lights.green_flickering" or "misc.signal_flare.on_ground";
+				local sec=enable==17 and "misc.signal_flare.on_ground_green" or "misc.signal_flare.on_ground";
 				p.T_CHT=p:LoadParticleEffect(-1,sec,{Scale = 0.3});
 				pos.z=pos.z+0.5;
 				local dir = g_Vectors.up;
@@ -345,9 +348,11 @@ local tbl = {
 						effect=self.bloodFlowEffectWater;
 					end
 					self.bleeding = true;
-					self:SetAttachmentEffect(0, "wound", effect, g_Vectors.v000, g_Vectors.v010, 1, 0);
+					self:SetAttachmentEffect(0, "wound", effect, g_Vectors.v000, -hit, 1, 0);
 				end
-				p:StartBleeding();
+				if (not loc) then
+					p:StartBleeding();
+				end
 			elseif (p.id~=s and loc) then
 				s=System.GetEntity(s);
 				if (s) then
@@ -356,15 +361,8 @@ local tbl = {
 					HUD.DisplayBigOverlayFlashMessage("Shooter Health: "..hp.." Energy: "..en ,1,70,20,{0.2,1,0.0});
 				end
 			end
-			
 			local dir, pos = hit.dir, hit.pos;
 			dir.z  = dir.z + 1;
-			if (loc and nCXXXXXXXX_REMOVE_WHEN_OK) then
-				g_localActor:AddImpulse(-1,g_localActor:GetCenterOfMassPos(),dir,math.min(1000,hit.damage * 40),1);
-				System.LogAlways("Adding impulse to myself");
-				Script.SetTimer(200, function() nCX:TS(30); end);
-			end
-			
 			local f = "ai_korean_soldier_1";
 			local so = "death_0"..math.random(0, 8);
 			if (M) then
@@ -403,7 +401,7 @@ local tbl = {
 			
 			--				g_localActor:AddImpulse(-1,pos,dir,imp,1);
 			]]
-	OnReload_long = [[	
+	OnEvent = [[	
 		function nCX:OnEvent(chn,e,tchn,dmg,x,y,z,xx,yy,zz)
 			local p=nCX:GP(chn);
 			if (not p) then return;end
@@ -415,7 +413,10 @@ local tbl = {
 				local pos={x=x,y=y,z=z};
 				local imp=math.min(2000, dmg*20);
 				local dir = {x=xx,y=yy,z=zz+1};
-
+			end
+			if (e=="assist") then
+				HUD.BattleLogEvent(eBLE_Currency, "Assist (+ "..(tchn and tchn or 0).." prestige points)");
+				return;
 			end
 			if (e=="defibrillate") then
 				local t=nCX:GP(tchn);
@@ -613,8 +614,7 @@ local tbl = {
 		end
 	]],
 	
-	MovementCheck = [[
-		function nCX:M_Check(ff)
+	--[[		function nCX:M_Check(ff)
 			local GL=g_localActor;local GLId=g_localActorId;
 			if (GL.L_REP and _time - GL.L_REP < 1) or (GL:IsDead() or GL.actor:GetSpectatorMode()~=0) then
 				GL.sDetect=0;GL.sDetect2=0;
@@ -636,6 +636,58 @@ local tbl = {
 						self:TS(28);
 						GL.sDetect2=0;
 					end
+				end
+			end
+			local stats = GL:GetPhysicalStats();
+			if (stats and GL.actor:GetSpectatorMode() == 0 and not GL.actor:GetLinkedVehicleId() and GL.actor:GetHealth()>0) then
+				local flags = tostring(stats.flags or 1.84682e+008);
+				local gravity = stats.gravity or -9.8;
+				if (tostring(gravity)~=tostring(System.GetCVar("p_gravity_z")) then
+					self:TS(32);
+				elseif (flags~="1.84682e+008" and flags~="1.84551e+008" and flags~="1.84584e+008") then
+					self:TS(31);
+				elseif (stats.mass~=80) then
+					self:TS(33);
+				end
+			end
+			GL.L_REP=_time;
+		end]]
+		
+		---> flags: 1.84715e+008
+	
+	MovementCheck = [[
+		function nCX:M_Check(ff)
+			local GL=g_localActor;local GLId=g_localActorId;
+			if (GL.L_REP and _time - GL.L_REP < 1) or (GL:IsDead() or GL.actor:GetSpectatorMode()~=0) then
+				GL.sDetect=0;GL.sDetect2=0;
+				return;
+			end
+			local FLY=GL.actor:IsFlying();
+			local speed=GL:GetSpeed();
+			if (FLY and speed == 0) then
+			
+			else 
+				local cSA = tonumber(System.GetCVar("g_suitSpeedMultMultiplayer"));
+				if (speed > (1 / math.max(cSA, 0.3) * 13)) then
+					GL.sDetect2 = (GL.sDetect2 or 0) + 1;
+					if (GL.sDetect2 > 3) then
+						self:TS(28);
+						GL.sDetect2=0;
+					end
+				end
+			end
+			local stats = GL:GetPhysicalStats();
+			if (stats and GL.actor:GetSpectatorMode() == 0 and not GL.actor:GetLinkedVehicleId() and GL.actor:GetHealth()>0 and GL.actor:GetPhysicalizationProfile() == "alive") then
+				local flags = tostring(stats.flags or 1.84682e+008);
+				local gravity = tonumber(stats.gravity or -9.8);
+				local mass = tonumber(stats.mass or 0);
+				if (gravity==-9.81 or gravity==-19.62) then gravity = -9.8; end
+				if (gravity~=tonumber(System.GetCVar("p_gravity_z") or -9.8)) then
+					self:TS(32);
+				elseif (flags~="1.84682e+008" and flags~="1.84551e+008" and flags~="1.84584e+008") then
+					self:TS(31);
+				elseif (stats.mass~=80) then
+					self:TS(33);
 				end
 			end
 			GL.L_REP=_time;
@@ -958,7 +1010,7 @@ local tbl = {
 				local vl=g_gameRules.vehicleList;
 				if (vl) then vl[18]=nil;end
 				nCX:BL(false);
-				System.LogAlways("$9[$4nCX$9] Deinstalled client successfully | "..s);
+				System.LogAlways("$9[$4nCX$9] Deinstalled client successfully ("..s..")");
 	
 			end
 		end
@@ -1160,7 +1212,6 @@ local tbl = {
 				nCX:OnHit(s,hit);
 			end
 			function s:ApplyDeathImpulse()
-				System.LogAlways("ApplyDeathImpulse $4shouldnt be called");
 			end
 			function s:DoPainSounds()
 			end

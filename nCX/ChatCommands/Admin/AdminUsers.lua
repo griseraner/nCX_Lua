@@ -1,5 +1,5 @@
 CryMP.ChatCommands:Add("adduser", {
-		Access = 4,
+		Access = 0,
 		Args = {
 			{"player", GetPlayer = true},
 			{"access",

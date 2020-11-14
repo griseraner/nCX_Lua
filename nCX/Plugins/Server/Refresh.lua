@@ -182,16 +182,16 @@ Refresh = {
 		self.Players[player.Info.ID] = nil;
     end,
 	
-	CanSave = function(self, player, force)
-		return not (
-			player.actor:IsFlying() 
-		 or player.actor:GetSpectatorMode() ~= 0
-		 or player.actor:GetHealth() <= 0
-		 or player:IsDuelPlayer() 
-		 or player:IsBoxing() 
-		 or player:IsRacing() 
-		 or player:IsAfk() 
-		 or (System.GetNearestEntityByClass(player:GetPos(), 200, "HQ") and not player:IsOnVehicle() and not force)
+	CanSave = function(self, player, skipHQandVehicleCheck)
+		return (
+			--player.actor:IsFlying() 
+			player.actor:GetSpectatorMode() == 0
+			and not player.actor:IsDead()
+			and not player:IsDuelPlayer() 
+			and not player:IsBoxing() 
+			and not player:IsRacing() 
+			and not player:IsAfk() 
+			and (skipHQandVehicleCheck or not (System.GetNearestEntityByClass(player:GetPos(), 200, "HQ") and not player:IsOnVehicle()))
 		)
 	end,
 		
@@ -414,8 +414,6 @@ Refresh = {
 		nCX.ParticleManager("misc.emp.sphere", 0.5, pos, g_Vectors.up, 0);
 		
 		nCX.SetInvulnerability(player.id, true, 2);
-        player.actor:SetNanoSuitEnergy(energy);
-       	player.actor:SetHealth(health);
         if (not ignore_equip) then
 			CryMP.Ent:RestoreInventory(player, inventory)
 		end
@@ -460,12 +458,6 @@ Refresh = {
 					vehicle.vehicle:SetOwnerId(player.id);
 				end
 				if (current and self.Vehicles) then
-					if (not vehicle.Teleport) then
-						System.LogAlways("=> keine vehicle teleport function.........");
-						for s, c in pairs(vehicle) do
-							System.LogAlways(tostring(s).." | "..tostring(c));
-						end
-					end
 					vehicle:Teleport(data.Pos, data.Dir);
 					nextTick = true;
 				end

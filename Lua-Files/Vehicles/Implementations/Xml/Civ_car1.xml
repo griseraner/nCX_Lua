@@ -10,7 +10,7 @@
    <DamageMultiplier damageType="gaussbullet" multiplier="0.15000001"/>
    <DamageMultiplier damageType="melee" multiplier="0.050000001"/>
    <DamageMultiplier damageType="fire" multiplier="0.050000001"/>
-   <DamageMultiplier damageType="collision" multiplier="1"/>
+   <DamageMultiplier damageType="collision" multiplier="0.7"/>
    <DamageMultiplier damageType="explosion" multiplier="1" splash="0.25"/>
    <DamageMultiplier damageType="law_rocket" multiplier="2" splash="0.5"/>   
    <DamageMultiplier damageType="frag" multiplier="0.25" splash="0.25"/>

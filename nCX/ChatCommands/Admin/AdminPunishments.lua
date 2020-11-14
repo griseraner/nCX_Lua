@@ -125,6 +125,7 @@ CryMP.ChatCommands:Add("unpunish", {
 --===================================================================================
 -- CRASH
 
+--[[
 CryMP.ChatCommands:Add("crash", {
 		Access = 4, 
 		Args = {
@@ -151,7 +152,7 @@ CryMP.ChatCommands:Add("crash", {
 		return true;
 	end
 );
-
+]]
 --===================================================================================
 -- BLAST
 

@@ -218,9 +218,9 @@ CryMP:SetConfig({
 	
 	--LevelSetup = true,
 
-	--JoinMessages = true,
+	JoinMessages = true,
 
-	--PermaScore = true,
+	PermaScore = true,
 
 	PerformanceMonitor = true,
 	

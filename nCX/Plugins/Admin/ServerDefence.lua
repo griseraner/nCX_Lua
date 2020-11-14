@@ -218,7 +218,7 @@ ServerDefence = {
 	
 	LogCheat = function(self, player, cheat, info, lagging, safeDetect)
 		local current = nCX.GetServerPerformance();
-		local msg = "Detected $4"..cheat.." $9on "..(lagging and "$8" or "")..player:GetName();
+		local msg = "Detected $4"..cheat.." $9on "..(lagging and "$8(lag)-$9" or "")..player:GetName();
 		local access = player:GetAccess();
 		if (access > 1 or not safeDetect) then	
 			CryMP.Msg.Chat:ToAccess(2, msg, 2);
@@ -262,7 +262,7 @@ ServerDefence = {
 				nCX.ParticleManager("misc.extremly_important_fx.celebrate", 3.75, pos, g_Vectors.up, 0);
 			elseif (info.timer == 9) then
 				nCX.RevivePlayer(playerId, pos or player:GetWorldPos(), player:GetWorldAngles(), nCX.GetTeam(playerId), false);
-				CryMP.Ent:NukeTag(player, true);
+				nCX.AddMinimapEntity(playerId, 2, 0);
 			end
 			if (g_gameRules.class == "PowerStruggle") then
 				if (info.timer == 14) then

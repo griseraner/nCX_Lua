@@ -213,6 +213,7 @@ CryMP.Library = {
 				CryAction.CreateGameObjectForEntity(spawned.id);
 				CryAction.BindGameObjectToNetwork(spawned.id);
 				CryAction.ForceGameObjectUpdate(spawned.id, true);
+				spawned:Physicalize(0, PE_RIGID, physParam);
 				spawned:AwakePhysics(1);
 				local c = {[1]=2,[2]=1,};
 				local teamId = c[nCX.GetTeam(player.id)] or 2;
@@ -312,7 +313,7 @@ CryMP.Library = {
 	end,
 
 	CalcSpawnPos = function(self, player, distance)
-		nCX.UpdateAreas(player.id); --update areas..
+		--nCX.UpdateAreas(player.id); --update areas..
 		distance = distance or 1.0;
 		local pos = player:GetBonePos("Bip01 head");
 		local dir = player:GetBoneDir("Bip01 head");
@@ -397,15 +398,14 @@ CryMP.Library = {
 		if (alive and teamId ~= 0) then
 			-- bugged atm.. maybe not?
 			if (g_gameRules.class == "PowerStruggle" and (auto or (not player:IsOnVehicle() and ((not CryMP.Ent:InEnemyTerritory(player, player:GetPos(), teamId) and not CryMP.Ent:IsLastExitedVehicleOwner(player)) or player:GetAccess() > 1)))) then
+				player.actor:SetPhysicalizationProfile("ragdoll"); --trigger a physicalization
 				g_gameRules.Server.OnChangeTeam(g_gameRules, player, teamId, true);
 				local zoneId = g_gameRules.inCaptureZone and g_gameRules.inCaptureZone[player.id];
 				local zone = zoneId and System.GetEntity(zoneId);
 				if (zone and zone.Server and zone.Server.OnLeaveArea) then
 					zone.Server.OnLeaveArea(zone, player, false);
 				end
-				nCX.SetTeam(teamId, player.id);
 				nCX.RevivePlayer(player.id, player:GetWorldPos(), player:GetWorldAngles(), false);
-				g_gameRules.Server.RequestSpawnGroup(g_gameRules, player.id, nCX.GetTeamDefaultSpawnGroup(teamId) or NULL_ENTITY, true);
 				if (zone and zone.Server and zone.Server.OnEnterArea) then
 					zone.Server.OnEnterArea(zone, player, false);
 				end

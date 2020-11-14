@@ -32,7 +32,7 @@ Flag = {
 		CryAction.CreateGameObjectForEntity(self.id);
 		CryAction.BindGameObjectToNetwork(self.id);
 		self:LoadGeometry(0, self.Properties.objModel);
-		--self:Physicalize(0, PE_RIGID, { mass = 0 });
+		self:Physicalize(0, PE_RIGID, { mass = 0 });
 		--self:RedirectAnimationToLayer0(0, true);
 	end,
 	---------------------------

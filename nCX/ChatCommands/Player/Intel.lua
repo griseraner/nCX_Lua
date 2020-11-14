@@ -197,12 +197,12 @@ CryMP.ChatCommands:Add("spy", {
 							end 
 							nCX.SendTextMessage(2, ":: [ WARNING ] :: ! :: POSITIONS REVEALED :: ! :: [ WARNING ] ::", tchannelId);
 							CryMP.Ent:PlaySound(target.id, "alert");
-							CryMP.Ent:NukeTag(target, true);
+							nCX.AddMinimapEntity(target.id, 2, 0);
 							CryMP:SetTimer( 4,function()
 								if (energy) then
 									target.actor:SetNanoSuitEnergy(energy);
 								end
-								CryMP.Ent:NukeTag(target, false);
+								nCX.RemoveMinimapEntity(target.id);
 							end);
 							c=c+1;
 						end

@@ -7,7 +7,7 @@
 		<param name="serverspawn" value="1" />
 		<param name="predictspawn" value="1" />
 	</flags>	
-	<physics type="static"> <!-- default static -->
+	<physics type="rigid"> <!-- default static -->
 		<param name="material" value="mat_metal" />
 	</physics>
 	<explosion>

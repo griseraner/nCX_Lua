@@ -2,7 +2,7 @@ JoinMessages = {
 
 	Server = {
 	
-	--[[
+	
 		OnConnect = function(self, channelId, player, profileId, restart) 
 			if (not restart) then
 				local msgs = self:GetPDA(player);
@@ -15,7 +15,7 @@ JoinMessages = {
 					end
 				--end);
 			end
-		end,]]
+		end,
 --[[
 		OnRevive = function(self, channelId, player, vehicle, first)
 			if (first) then

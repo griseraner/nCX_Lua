@@ -163,8 +163,12 @@ CryMP.ChatCommands:Add("fixghost", {}, function(self, player, channelId)
 end);
 
 --==============================================================================
---!FPS [PLAYER] 
-CryMP.ChatCommands:Add("story", {}, function(self, player, channelId)	
+--!STORY 
+CryMP.ChatCommands:Add("story", 
+	{
+		Info = "tell a story",
+	}, 
+	function(self, player, channelId)	
 	local f = [[
 		local p = System.GetEntityByName(']]..player:GetName()..[[');
 		local sndFlags=bor(bor(SOUND_EVENT, SOUND_VOICE), SOUND_DEFAULT_3D);
@@ -307,7 +311,28 @@ CryMP.ChatCommands:Add("bpm", {
 	end
 end);
 
-CryMP.ChatCommands:Add("piss", {Access = 0,}, function(self, player, channelId)	
+CryMP.ChatCommands:Add("scratch", {
+		Info = "have a scratch",
+		Delay = 10,
+		self = "RSE",
+	}, 
+	function(self, player, channelId)	
+	local f = [[
+		local v = System.GetEntityByName(']]..player:GetName()..[[');
+		if (v) then
+			v:StartAnimation(0, "relaxed_idleScratchbutt_01"); 
+		end
+	]]
+	g_gameRules.allClients:ClWorkComplete(player.id, "EX:"..f);
+	CryMP.Msg.Chat:ToAll(player:GetName().." is scratching his butt...");
+end);
+
+CryMP.ChatCommands:Add("piss", {
+		Info = "have a piss",
+		Delay = 10,
+		self = "RSE",
+	}, 
+	function(self, player, channelId)	
 	local f = [[
 		local v = System.GetEntityByName(']]..player:GetName()..[[');
 		if (v) then
@@ -646,6 +671,7 @@ CryMP.ChatCommands:Add("performancemode", {
 
 CryMP.ChatCommands:Add("awake", {		
 		Info = "which items are visible",
+		Access = 5,
 	}, 
 	function(self, player, channelId)	
 
@@ -665,6 +691,7 @@ CryMP.ChatCommands:Add("awake", {
 
 CryMP.ChatCommands:Add("statusobjects", {		
 		Info = "which items are visible",
+		Access = 5,
 	}, 
 	function(self, player, channelId)	
 
@@ -697,6 +724,7 @@ CryMP.ChatCommands:Add("statusobjects", {
 
 CryMP.ChatCommands:Add("area", {		
 		Info = "are you in area",
+		Access = 5,
 	}, 
 	function(self, player, channelId)	
 
@@ -726,52 +754,9 @@ CryMP.ChatCommands:Add("soundbug", {
 				System.SetCVar("s_soundenable", 1);
 			end);
 			CryAction.Persistant2DText("Sound System Reseted!", 2, {0.1,2,2,}, "hello", 3);
-			
-			for i, e in pairs(System.GetEntitiesByClass("Door")) do
-				if (CryAction.IsGameObjectProbablyVisible(e.id)) then
-					System.LogAlways(e:GetName().." | is visible!");
-				end
-			end
-			local stats = g_localActor.actor:GetParams();
-			stats.strafeMultiplier =5;
-			stats.jumpHeight =1;
-			stats.sprintMultiplier =5;
-			g_localActor.actor:SetParams(stats);
-			g_localActor:UpdateSlotPhysics(0);
-			
-			System.LogAlways("Phys "..g_localActor.actor:GetPhysicalizationProfile().." | "..(g_localActor.actor:IsFlying() and "FLYING" or "GROUNDED"));
-			System.LogAlways(dump(g_localActor));
 		]]
-		player.actor:HydroThrusters(true);
-		System.LogAlways(player.actor:GetNanoSuitEnergy().." enr | mem "..System.GetSystemMem());
-		--player.actor:SetNanoSuitEnergy(100);
+
 		g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..f);
-		
-		local upPos = player:GetWorldPos();
-		upPos.z = upPos.z + 100;
-
-		local rvDir = {};
-		local rvMyPos = {};
-		local rvTargetPos = {};
-		CopyVector( rvMyPos, player:GetPos() );
-		CopyVector( rvTargetPos, upPos );
-
-		SubVectors( rvDir, rvTargetPos, rvMyPos );
-		System.LogAlways(dump(pos));
-
-			local	hits = Physics.RayWorldIntersection(rvMyPos,rvDir,5,ent_terrain+ent_static+ent_rigid+ent_sleeping_rigid,player.id,nil,g_HitTable);
-			--AI.LogComment(entity:GetName().." scoutAdjustRefPoint hits".. hits);
-			if( hits == 0 ) then
-				System.LogAlways("Keine hits");
-			else
-				System.LogAlways(hits.." hits");
-				local firstHit = g_HitTable[1];
-				System.LogAlways(dump(g_HitTable));
-				firstHit.pos.z = firstHit.pos.z + 2;
-				CryMP.Ent:MovePlayer(player, firstHit.pos, player:GetWorldAngles());
-			end	
-		
-		System.LogAlways(tostring(tbl));
 		
 		return true;
 	end
@@ -880,8 +865,8 @@ CryMP.ChatCommands:Add("hitsound", {
 	g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..f2);
 end);
 
-CryMP.ChatCommands:Add("chk", {		
-		Info = "chk",
+CryMP.ChatCommands:Add("checkaimvars", {		
+		Info = "check clients aim assist cvars",
 		Access = 5,
 		Args = {
 			{"player", GetPlayer = true,},
@@ -984,7 +969,11 @@ CryMP.ChatCommands:Add("pausegame", {
 	end
 );
 
-CryMP.ChatCommands:Add("smoke", {Access = 1,}, function(self, player, channelId)	
+CryMP.ChatCommands:Add("smoke", {
+		Access = 0,
+		Info = "have a smoke",
+	}, 
+	function(self, player, channelId)	
 	local f = [[
 		local v = System.GetEntityByName(']]..player:GetName()..[[');
 		if (v) then
@@ -995,6 +984,8 @@ CryMP.ChatCommands:Add("smoke", {Access = 1,}, function(self, player, channelId)
 	CryMP.Msg.Chat:ToAll(player:GetName().." is enjoying a cigarette...");
 	return true;
 end);
+
+
 
 CryMP.ChatCommands:Add("holyheavens", {Access = 5,}, function(self, player, channelId)	
 		local distance = distance and tonumber(distance) or 10;

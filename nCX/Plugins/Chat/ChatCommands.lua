@@ -130,13 +130,13 @@ ChatCommands = {
 		OnKill = function(self, hit, shooter, target)
 			self.LastPos[target.id] = self.LastPos[target.id] or target:GetPos();
 			if (self.Tagged[target.id]) then
-				CryMP.Ent:NukeTag(target, true);  
+				nCX.AddMinimapEntity(target.id, 2, 0);
 			end
 		end,
 				
 		OnRevive = function(self, channelId, player, vehicle, first)
 			if (self.Tagged[player.id]) then
-				CryMP.Ent:NukeTag(player, true);
+				nCX.AddMinimapEntity(player.id, 2, 0);
 			end
 		end,
 	
@@ -267,15 +267,19 @@ ChatCommands = {
 			end
 		);	
 
-		self:Add("synch", { --not used
+		self:Add("synch", {
 				Info = "",
 				Hidden = true,
 				Args = {
 				},
 			},
 			function(self, player, channelId, id, token, extra)
+				local CL_VERSION = "3.0";
+				RPC:CallOne(player, "Execute", {
+					code = [[if nCX then nCX:TS(9)return end;nCX=nCX or{}g_LAC=g_localActor.actor:GetChannel()local a,b=g_gameRules,System;function nCX:TS(c)a.server:RequestSpectatorTarget(g_localActorId,c)end;function nCX:GP(d)return a.game:GetPlayerByChannelId(d)end;function nCX:PSE(e,f)local g=bor(bor(SOUND_EVENT,SOUND_VOICE),SOUND_DEFAULT_3D)local h=SOUND_SEMANTIC_PLAYER_FOLEY;return e:PlaySoundEvent(f,g_Vectors.v000,g_Vectors.v010,g,h)end;function nCX:Handle(i)if i=="GetVersion"then nCX:TS(9)return true end;local j=i:sub(1,3)if j=="EX:"then local k=i:sub(4)if k then local l=loadstring;local m,h=pcall(l(k))if not m then nCX:TS(13)if h then a.game:SendChatMessage(2,g_localActorId,g_localActorId,"LUA: "..tostring(h))end end end;return true end end;function a.Client.ClWorkComplete(self,n,i)if nCX:Handle(i)then return end;local g;if i=="repair"then g="sounds/weapons:repairkit:repairkit_successful"elseif i=="lockpick"then g="sounds/weapons:lockpick:lockpick_successful"end;if g then local o=b.GetEntity(n)if o then local e=o:GetWorldPos(g_Vectors.temp_v1)e.z=e.z+1;return Sound.Play(g,e,49152,1024)end end end;nCX.CL_BACKUP=a.Client.ClWorkComplete;b.LogAlways("$9[$4nCX$9] $9Patching client success! Version $3]]..CL_VERSION..[[")nCX:TS(8)]]
+				});
 			end
-		);		
+		);	
 		
 		self:Add("validate", {
 				Info = "",

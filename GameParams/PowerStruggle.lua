@@ -120,7 +120,6 @@ PowerStruggle = {
 				System.SetCVar("g_timelimit", 15);
 			end				
 			self.IsSmallMap = CryMP.Ent.IsSmallMap and CryMP.Ent:IsSmallMap();
-			nCX.Spawned = {};
 			nCX.FirstBlood = false;
 			self:Reset(); 
 			nCX.GameEnd = false;
@@ -163,7 +162,6 @@ PowerStruggle = {
 			end
 			nCX.FirstBlood = false;
 			nCX.GameEnd = false;
-			nCX.Spawned = {};
 		end,
 		---------------------------
 		--		OnClientConnect		-- changed 03.07
@@ -172,12 +170,11 @@ PowerStruggle = {
 			if (not reset) then
 
 			else
-				--nCX.Spawned[channelId] = nil;
 				local teamId = nCX.GetChannelTeam(channelId) or 0;
 				local specMode = self.channelSpectatorMode[channelId] or 0; --nCX.GetChannelSpec(channelId) or 0; not saving :s
 				
 				local actorMode = (player.actor and player.actor:GetSpectatorMode() or -1) or "KEINE ACTOR";
-				System.LogAlways("Lua - OnClientConnect "..channelId.." | nCX Specmode : "..specMode.." | Lua : "..(self.channelSpectatorMode[channelId] or 0).." | Actor "..actorMode);
+				System.LogAlways("Lua - OnClientConnect "..channelId.." | nCX Specmode : "..nCX.GetChannelSpec(channelId).." | Lua : "..(self.channelSpectatorMode[channelId] or 0).." | Actor "..actorMode);
 				
 				if (specMode==0 or teamId~=0) then
 					nCX.SetTeam(teamId, player.id);
@@ -387,27 +384,21 @@ PowerStruggle = {
 		OnChangeTeam = function(self, player, teamId, skip)
 			local currentId = nCX.GetTeam(player.id);
 			local channelId = player.Info.Channel;
+			local prevTeamId = teamId;
 			local quit, player, teamId = CryMP:HandleEvent("OnChangeTeam", {player, teamId, currentId});
+			nCX.SetTeam((teamId and teamId or prevTeamId), player.id);
+			self.Server.RequestSpawnGroup(self, player.id, nCX.GetTeamDefaultSpawnGroup(teamId) or NULL_ENTITY, true);
 			if (not quit) then
-				nCX.SetTeam(teamId, player.id);
-				if (not nCX.Spawned[channelId]) then
+				if (not nCX.HasChannelSpawned(channelId)) then
 					local teamName = teamId == 1 and "NK" or "US";
-					if (CryMP.RSE) then
-						self.otherClients:ClWorkComplete(channelId, player.id, "EX:HUD.BattleLogEvent(1, '"..player:GetName().." has entered team "..teamName.."');");
-					else
-						self.otherClients:ClClientEnteredGame(channelId, "("..teamName..") "..player:GetName());
-					end
+					self.otherClients:ClClientEnteredGame(channelId, "("..teamName..") "..player:GetName());
 				end
 				if (not skip) then
 					if (player.actor:GetHealth() > 0) then
 						self:KillPlayer(player);
 					end
 					if (teamId ~= 0) then
-						if (CryMP.RSE and not player.actor:IsClientInstalled()) then
-							CryMP.RSE:Initiate(player.Info.Channel, player);
-						else
-							self:QueueRevive(player);
-						end
+						self:QueueRevive(player);
 					end
 				end
 				if (currentId ~= 0) then
@@ -781,8 +772,9 @@ PowerStruggle = {
 		---------------------------
 		--		OnWorkComplete			-- added 08.12
 		---------------------------
-		OnWorkComplete = function(self, owner, targetId, work_type, amount)
+		OnWorkComplete = function(self, owner, targetId, work_type, amount, customWorkTarget)
 			if (work_type == "repair") then
+				amount = customWorkTarget and (amount * -1) or amount;
 				self:AwardPPCount(owner.id, math.floor(amount * 0.1));
 			elseif (work_type == "disarm") then
 				if (not nCX.IsSameTeam(owner.id, targetId)) then
@@ -1166,11 +1158,11 @@ PowerStruggle = {
 	--		RevivePlayer		-- changed 03.07
 	---------------------------
 	RevivePlayer = function(self, player, groupId, keepEquip, angles)
-		--System.LogAlways("RevivePlayer PS.lua");
+		local channelId = player.Info.Channel;
+		local first = not nCX.HasChannelSpawned(channelId);
 		player.serverSeatExit = true;
 		player.vehicleId = nil;
 		local clearInventory = not keepEquip or player:IsDead();
-		local channelId = player.Info.Channel;
 		local typeGroupId = type(groupId);
 		self:ResetUnclaimedVehicle(player.id, false);
 		local vehicle;
@@ -1224,11 +1216,6 @@ PowerStruggle = {
 		end			
 		self.reviveQueue[player.id] = nil;
 		--player:UpdateAreas();
-		--player.actor:SetSpectatorMode(0, NULL_ENTITY);
-		local first = not nCX.Spawned[channelId];
-		--if (first) then
-		--	nCX.Spawned[channelId] = true;
-		--end
 		if (nCX.IsPlayerInGame(player.id)) then
 			self.onClient:ClReviveCycle(channelId, false);
 		end
@@ -1245,9 +1232,6 @@ PowerStruggle = {
 			zone.Server.OnEnterArea(zone, player, false);
 		end
 		player.serverSeatExit = nil;
-		if (first) then
-			nCX.Spawned[channelId] = true;
-		end
 		self.buySpam[player.id] = 0;
 	end,
 	---------------------------

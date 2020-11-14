@@ -304,8 +304,8 @@ Equip = {
 			g_gameRules:BuyItem(actor, default, true, true);
 			--g_gameRules:BuyItem(actor, "explosivegrenade", true, true);
 		end
-		local msg = "HUD.BattleLogEvent(eBLE_Information,'Custom Equipment loaded');";
-		g_gameRules.onClient:ClWorkComplete(actor.Info.Channel, actor.id, "EX:"..msg);
+		--local msg = "HUD.BattleLogEvent(eBLE_Information,'Custom Equipment loaded');";
+		--g_gameRules.onClient:ClWorkComplete(actor.Info.Channel, actor.id, "EX:"..msg);
 	end,
 	
 	CheckInput = function(self, actor, class, weapon)

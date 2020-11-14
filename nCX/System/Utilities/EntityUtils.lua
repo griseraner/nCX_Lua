@@ -57,7 +57,7 @@ CryMP.Ent = {
 	
 	Revive = function(self, player, inventory, default, clearInventory, pos)
 		if (g_gameRules.GetPlayerSpawnGroup and g_gameRules.Server.RequestSpawnGroup) then
-			local spawnGroupId = self:GetPlayerSpawnGroup(player.id);
+			local spawnGroupId = nCX.GetPlayerSpawnGroup(player.id);
 			if (not spawnGroupId or default) then
 				spawnGroupId = nCX.GetTeamDefaultSpawnGroup(nCX.GetTeam(player.id));
 				g_gameRules.Server.RequestSpawnGroup(g_gameRules, player.id, spawnGroupId or NULL_ENTITY, true);
@@ -514,7 +514,7 @@ CryMP.Ent = {
 		end
 		return newname;
 	end,
-	
+
 	CheckName = function(self, name, playerId)
 		if (not name) then
 			return;

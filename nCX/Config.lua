@@ -64,7 +64,7 @@ nCX.Config = {
 		"7DXP3VLQLSFAZBJGRR86",--chris
 	},
 	CVars = {
-		["cl_crymp"]							   = "1",
+		["cl_crymp"]							   = "0",
 		
 		["con_restricted"]							= "0",
 		["sv_port"]									= "50001",
@@ -76,9 +76,9 @@ nCX.Config = {
 		["sv_gamerules"]							= "PowerStruggle",
 		["sv_lanonly"]								= "0",
 		["fg_abortonloaderror"]						= "-1",
-		["log_verbosity"]							= "2",
+		["log_verbosity"]							= "3",
 		--["sys_lowspecpak"]							= "0",
-		["log_fileverbosity"]						= "4",
+		["log_fileverbosity"]						= "0",
 		["g_minteamlimit"]							= "0",
 		["g_roundRestartTime"]						= "0",
 		["g_revivetime"]							= "12",
@@ -86,6 +86,10 @@ nCX.Config = {
 		["g_minplayerlimit"]						= "2",
 		["g_friendlyfireratio"] 					= "0",
 		["g_pp_scale_price"]						= "1",
+		
+		--TEST
+		--["ac_enableExtraSolidCollider"] = "1",		
+		--["ca_KeepModels"] = "1",	
 		
 		["g_c4_limit"]								= "1000",
 		["g_claymore_limit"]	  				    = "4",
@@ -100,6 +104,7 @@ nCX.Config = {
 		["nCX_VehicleMovement"]						= "0",
 		["nCX_PerformanceMode"]						= "1",
 		["nCX_SrGameMode"]							= "Test Mode",
+		["nCX_HighPingLimit"]						= "50000",
 		
 		["g_energy_scale_income"]   				= "0.4",
 		["v_lights_disable_time"]  					= "-1",
@@ -162,8 +167,8 @@ nCX.Config = {
 		["i_debuggun_2"] 	= true,	
 	},
 	-- These will be set on Server only, synching disabled!
-	CVars_Server = {
---[[
+	CVars_Server = {		
+		["ac_forceSimpleMovement"] 					= "0",
 		["ca_EnableAssetStrafing"] 					= "0",
 		["ca_EnableAssetTurning"] 					= "0",
 		["ca_UseAimIK"] 							= "0",	
@@ -171,8 +176,9 @@ nCX.Config = {
 		["ca_UseFacialAnimation"] 					= "0",		
 		["ca_UseMorph"] 							= "0",	
 		["ca_UsePhysics"] 							= "0",
-		["ca_LoadDatabase"] 							= "0",
-		["ca_ForceNullAnimation"] 							= "0",
+		["ca_NoAnim"] 								= "1",
+		["ca_LoadDatabase"] 						= "0",
+		["ca_ForceNullAnimation"] 					= "0",
 		["es_OnDemandPhysics"] 						= "0",	
 		["r_NoLoadTextures"] 						= "1",		
 		["r_NoPreprocess"] 							= "1",	
@@ -195,7 +201,6 @@ nCX.Config = {
 		["r_UseParticlesRefraction"] 				= "0",	
 		["r_UseZPass"] 								= "0",
 		["r_WaterReflectionsUseMinOffset"] 			= "0",
-		--]]
 	},
 	Censor = {
 		--[[
@@ -222,4 +227,8 @@ nCX.Config = {
 		["plantation x"] = "PowerStruggle";
 		["savanna"] = "TeamInstantAction";
 	},
+	GarbageEntities = {
+		"MusicPlayPattern","ReverbVolume","Light","ParticleEffect","TeamRandomSoundVolume","RandomSoundVolume","AmbientVolume","AmbientVolume","SoundEventSpot","Chickens","MusicMoodSelector","Birds","Frogs","Crabs","Fish","Turtles",
+		"MusicEndTheme", "Cloud", "FogVolume", "MusicThemeSelector","TagPoint","PrecacheCamera",--[["ProximityTrigger",]]"Plover","ParticleEffect",
+	};
 };
