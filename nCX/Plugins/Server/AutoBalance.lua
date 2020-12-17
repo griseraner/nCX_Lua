@@ -147,7 +147,7 @@ AutoBalance = {
 				local channelId = player.Info.Channel;
 				local typ = "";
 				if (multiple) then
-					typ = " (Game Balance)";
+					typ = " (Calculated Balance)";
 				end
 				self:Log("Switching player "..name.." to Team "..dstTeam..typ);
 				CryMP.Msg.Error:ToOther(channelId, "[ TEAM:BALANCE ] Moved "..name.." to Team "..dstTeam, self.Tag);

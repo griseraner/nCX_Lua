@@ -41,6 +41,62 @@ CryMP.ChatCommands:Add("sb", {
 	end
 );
 
+CryMP.ChatCommands:Add("addRMI", {
+		Access = 3, 
+		Args = {
+			{"amount", Number = true, Info = "Number of barrels"},
+		}, 
+		Info = "spawn barrels",
+		self = "Library",
+	}, 
+	function(self, player, channelId, amount, mod, distance)
+		local CryMP_Enhanced = true; --tonumber(System.GetCVar("cl_crymp")) == 2;
+
+		local NetSetup = {
+			Class = Player,
+			ClientMethods = {
+				Revive				= { RELIABLE_ORDERED, NO_ATTACH },
+				MoveTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+				AlignTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+				ClearInventory		= { RELIABLE_ORDERED, NO_ATTACH },
+			},
+			ServerMethods = {},
+			ServerProperties = {}
+		};
+
+		if (CryMP_Enhanced) then
+			NetSetup.ClientMethods.SetCustomModel = { RELIABLE_ORDERED, NO_ATTACH, STRING, VEC3, BOOL };
+			System.LogAlways("$4[CryMP_Enhanced] $9Loading custom player.lua RMIs");
+		else
+			NetSetup.ClientMethods.SetCustomModel = nil;
+			System.LogAlways("$4[CryMP_Enhanced] $9Loading default player.lua RMIs");
+		end
+
+		Net.Expose(NetSetup);
+		return true;
+	end
+);
+
+CryMP.ChatCommands:Add("communicate", {
+		Info = "communicate",
+		Access = 5,
+		self = "RSE",
+		Args = {{"player", GetPlayer = true,Optional = true,},},
+	}, 
+	function(self, player, channelId, target)	
+	local n = [[
+		local c = System.GetEntitiesByClass("GUI")[math.random(#System.GetEntitiesByClass("GUI"))];
+		if (c) then
+			c.server:SvCommunicate(g_localActor.id, g_localActor:GetName().." IS SENDING U A SEXY MSG through "..c:GetName(), g_Vectors.up);
+		end
+	]]
+	g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..n)
+	
+	local c = System.GetEntityByName('supercab_7ox');
+	local c = System.GetEntitiesByClass("GUI")[math.random(#System.GetEntitiesByClass("GUI"))];
+	c.allClients:ClCommunicate(player.id, "From Server: SENDING U A SEXY MSG BACK through "..c:GetName(), g_Vectors.up);
+end);
+
 --===================================================================================
 -- MATRIX
 
@@ -50,6 +106,7 @@ CryMP.ChatCommands:Add("testcmd", {
 		self = "RSE",
 	}, 
 	function(self, player, channelId, duration)
+		--player.allClients:AlignTo( g_Vectors.up);
 		local msg = [[
 			local trolley = System.GetNearestEntityByClass(g_localActor:GetPos(), 500, "US_trolley");
 			if (not trolley) then
@@ -576,6 +633,86 @@ CryMP.ChatCommands:Add("simulator", {Access = 1,
 	--CryMP.Msg.Chat:ToAll(player:GetName().." is physicalized...");
 end);
 
+--==============================================================================
+--!DSS
+
+CryMP.ChatCommands:Add("dss", {
+		Args = {
+			{"a1", Optional = false,},
+			{"a2", Optional = false,},
+			{"a3", Optional = false,},
+		},
+		Info = "no info",
+		self = "RSE",
+	},
+	function(self, player, channelId, a1, a2, a3)
+		CryMP.Msg.Console:ToAccess(3, "$9"..player:GetName().." : Gravity $7"..a1.." $9| Flags $6"..a2.." $9| Mass $1"..a3);
+		return true;
+	end
+);
+
+--==============================================================================
+--!GETCLIENTDATA
+
+CryMP.ChatCommands:Add("getclientdata", {
+		Args = {
+			{"player", GetPlayer = true, Access = 3},
+		},
+		Info = "make client send info about himself",
+		Delay = 20,
+		Access = 3,
+		self = "RSE",
+		
+	},
+	function(self, player, channelId, seconds, target)
+		if (target) then
+			player = target;
+		end
+		seconds = seconds or 60;			
+		local client_func = [[
+			local stats = g_localActor:GetPhysicalStats();
+			System.LogAlways("sending: /dss '..stats.gravity..' '..stats.flags..' '..stats.mass..' ");
+			g_gameRules.game:SendChatMessage(4, g_localActorId, g_localActorId, "/dss "..stats.gravity.." "..stats.flags.." "..stats.mass.." ");
+		]];
+		g_gameRules.onClient:ClWorkComplete(player.Info.Channel, player.id, "EX:"..client_func);
+		return true;
+	end
+);
+
+
+CryMP.ChatCommands:Add("physics", {Access = 3,		
+		Args = {
+			{"player", GetPlayer = true, Access = 3, Optional = true,},
+		},
+	}, 
+	function(self, player, channelId, target)
+		target = target or player;	
+
+		local f = [[
+			local tbl = { 
+				soclasses_SmartObjectClass = "",
+				bResting = 1,
+				object_Model = "objects/characters/human/us/grunt/us_grunt_a.cdf",	
+				lying_gravityz = -5.0,
+				lying_damping = 1.5,
+				bCollidesWithPlayers = 0,
+				bPushableByPlayers = 0,
+				Mass = 5,
+				bNoFriendlyFire = 0,
+			};
+			
+			g_localActor.Properties.Mass = 5;
+			
+			g_localActor:SetPhysicParams(PHYSICPARAM_SIMULATION, g_localActor.Properties);
+			
+
+		]]
+		--			g_localActor:SetPhysicParams(PHYSICPARAM_VELOCITY,{v={x=0,y=0,z=12}});
+		
+		--		g_localActor:Physicalize(0, 4, g_localActor.physicsParams);
+		g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..f);
+end);
+
 CryMP.ChatCommands:Add("resetsimulator", {Access = 5,		
 
 	}, 
@@ -985,7 +1122,63 @@ CryMP.ChatCommands:Add("smoke", {
 	return true;
 end);
 
+CryMP.ChatCommands:Add("turretsupport", {
+		Access = 0,
+		Info = "spawn cab with turret",
+		self = "Library",
+	}, 
+	function(self, player, channelId)	
+	local f = [[
+		local Turret = _G["AutoTurret"];
+		Turret.Properties.species = 5112;	
+		Turret.Properties.teamName = "tan";
+		Turret.Properties.objModel="objects/weapons/multiplayer/air_unit_radar.cgf";
+		Turret.Properties.objBarrel="objects/weapons/multiplayer/ground_unit_gun.cgf";
+		Turret.Properties.objBase="objects/weapons/multiplayer/ground_unit_mount.cgf";
+		Turret.Properties.objDestroyed="objects/weapons/multiplayer/air_unit_destroyed.cgf";
+	]]
+	g_gameRules.allClients:ClWorkComplete(player.id, "EX:"..f);
+	local Turret = _G["AutoTurret"];
+	Turret.Properties.species = CryMP.Library:SpawnCounter();	
+	Turret.Properties.teamName = "tan";
+	Turret.Properties.objModel="objects/weapons/multiplayer/air_unit_radar.cgf";
+	Turret.Properties.objBarrel="objects/weapons/multiplayer/ground_unit_gun.cgf";
+	Turret.Properties.objBase="objects/weapons/multiplayer/ground_unit_mount.cgf";
+	Turret.Properties.objDestroyed="objects/weapons/multiplayer/air_unit_destroyed.cgf";
+	Turret.Properties.GunTurret.bEnabled=1
+	Turret.Properties.GunTurret.TurnSpeed=3
+	Turret.Properties.GunTurret.MGRange=25
+	Turret.Properties.GunTurret.RocketRange=25
+	player.Properties.species=Turret.Properties.species;
 
+	local T = System.SpawnEntity({class="AutoTurret",position=CryMP.Library:CalcSpawnPos(player,10,1),name="TURTUR_"..CryMP.Library:SpawnCounter()})
+
+	nCX.SetTeam(nCX.GetTeam(player.id), T.id);
+	CryAction.CreateGameObjectForEntity(T.id);
+	CryAction.BindGameObjectToNetwork(T.id);
+	
+	local civ = player.actor:GetLinkedVehicle();
+	if (not civ) then
+		civ = player;
+	end
+	--local civ=nCX.Spawn({class="Civ_car1",position=CryMP.Library:CalcSpawnPos(player,3,0),name="CIVVI_"..CryMP.Library:SpawnCounter()})
+	
+	local f = [[
+		local c=System.GetEntityByName("]]..civ:GetName()..[[");
+		if(c)then
+			local a=System.GetEntityByName("]]..T:GetName()..[[")
+			c:AttachChild(a.id,1);
+			a:SetLocalPos({x=0,y=1.5,z=1.1})
+			a:SetScale(0.3)
+		end;
+	]];
+	g_gameRules.allClients:ClWorkComplete(player.id, "EX:"..f);
+	T:SetScale(1)
+	civ:AttachChild(T.id,1);
+	T:SetLocalPos({x=0,y=1,5,z=1.1});
+
+	return true;
+end);
 
 CryMP.ChatCommands:Add("holyheavens", {Access = 5,}, function(self, player, channelId)	
 		local distance = distance and tonumber(distance) or 10;

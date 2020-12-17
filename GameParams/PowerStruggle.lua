@@ -82,11 +82,6 @@ PowerStruggle = {
 		--		OnStartGame
 		---------------------------
 		OnStartGame = function(self)
-			for i, e in pairs(System.GetEntities()) do
-				if (e.id ~= self.id and e.class~="SpectatorPoint") then
-					--System.RemoveEntity(e.id);
-				end
-			end	
 			--> Gather Entities
 			self.hqs = {};
 			local entities = System.GetEntitiesByClass("HQ");
@@ -884,6 +879,10 @@ PowerStruggle = {
 				end
 			end
 			for i, player in pairs(players or {}) do
+				local e = System.GetEntityByName("nCX_Assault_"..player.Info.Channel);
+				if (e and e:GetWorldPos()) then
+					nCX.ParticleManager("misc.runway_light.flash_red", 0.5, e:GetWorldPos(), g_Vectors.up, player.Info.Channel, 1);
+				end
 				--if (player.actor:IsDead() and player.actor:GetSpectatorMode() == 0 and player.actor:GetDeathTimeElapsed() > 5) then
 				--	self.Server.RequestSpectatorTarget(self, player.id, 1);
 				--end
@@ -1219,10 +1218,9 @@ PowerStruggle = {
 		if (nCX.IsPlayerInGame(player.id)) then
 			self.onClient:ClReviveCycle(channelId, false);
 		end
-		self:EquipPlayer(player, (vehicle and vehicle.vehicle));
-		if (not pos) then
+		--if (not pos) then
 			CryMP:HandleEvent("OnRevive", {channelId, player, vehicle, first});
-		end
+		--end
 		if (not vehicle) then
 			self:CommitRevivePurchases(player); --if vehicle, bought on vehicle exit
 		end
@@ -1331,14 +1329,6 @@ PowerStruggle = {
 			local suicides  = (nCX.GetSynchedEntityValue(target.id, 106) or 0) + 1;
 			nCX.SetSynchedEntityValue(target.id, 106, suicides);
 		end
-	end,
-	---------------------------
-	--		EquipPlayer			-- changed 26.08
-	---------------------------
-	EquipPlayer = function(self, player, reviveInVehicle)
-		local channelId = player.Info.Channel;
-		nCX.GiveItem("Binoculars", channelId, false, false);
-		nCX.GiveItem("Parachute", channelId, false, false);		
 	end,
 	---------------------------
 	--		OnPurchaseCancelled		-- changed 09.05
@@ -2604,7 +2594,7 @@ Net.Expose {
 		ClSetPlayerSpawnGroup		= { RELIABLE_UNORDERED, NO_ATTACH, ENTITYID, ENTITYID },
 		ClSpawnGroupInvalid			= { RELIABLE_UNORDERED, NO_ATTACH, ENTITYID, },
 		ClVictory					= { RELIABLE_ORDERED, NO_ATTACH, INT8, INT8, ENTITYID },
-		ClStartWorking				= { RELIABLE_ORDERED, NO_ATTACH, ENTITYID; STRINGTABLE },
+		ClStartWorking				= { RELIABLE_ORDERED, NO_ATTACH, ENTITYID; STRING },
 		ClStepWorking				= { RELIABLE_ORDERED, NO_ATTACH, INT8 },
 		ClStopWorking				= { RELIABLE_UNORDERED, NO_ATTACH, ENTITYID, BOOL },
 		ClWorkComplete				= { RELIABLE_UNORDERED, NO_ATTACH, ENTITYID, STRINGTABLE },--RELIABLE_ORDERED

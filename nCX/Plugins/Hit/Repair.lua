@@ -300,6 +300,10 @@ Repair = {
 	end,
 	
 	Start = function(self, target, entity)	-- entity = repairvehicle or actor
+		--if (entity.actor) then
+		--	entity.actor:RepairTarget(target.id, true);
+		--	return;
+		--end
 		if (nCX.Count(self.Works) + nCX.Count(self.Vehicles) == 0) then
 			self:SetUpdate(true);
 		end
@@ -441,10 +445,6 @@ Repair = {
 		if (not self:CanRequest(player.id)) then
 			return false, "do current request first";
 		end
-		local pp = g_gameRules:GetPlayerPP(player.id);
-		if (pp < 300) then
-			return false, "need a minimum of 300 prestige"
-		end
 		local vehicle = player.actor:GetLinkedVehicle();
 		local isOnVehicle = vehicle ~= nil;
 		if (not vehicle) then
@@ -454,6 +454,10 @@ Repair = {
 				return false, "no vehicle found"
 			end
 		end
+		if (player.actor:RepairTarget(vehicle.id, true)) then	
+			return true;
+		end
+		
 		local work = self.Vehicles[vehicle.id];	
 		if (work) then
 			self:Stop(work)

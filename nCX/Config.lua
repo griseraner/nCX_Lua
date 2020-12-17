@@ -64,7 +64,7 @@ nCX.Config = {
 		"7DXP3VLQLSFAZBJGRR86",--chris
 	},
 	CVars = {
-		["cl_crymp"]							   = "0",
+		["cl_crymp"]							   = "1",
 		
 		["con_restricted"]							= "0",
 		["sv_port"]									= "50001",
@@ -97,14 +97,48 @@ nCX.Config = {
 		
 		["nCX_PerformanceValue"]					= "106",
 		["nCX_RecoilTreshold"]						= "0.0002",
-		["nCX_VehicleCollisionRatio"]   		   	= "0.00015",
+		["nCX_vehicleCollisionRatio"]   		   	= "0.00015",
 		["nCX_ExplosionMult"]   		   			= "0.25",
 		["nCX_EnableAmmoBoost"]   		   			= "0",
-		["nCX_Movement"]							= "0",
-		["nCX_VehicleMovement"]						= "0",
 		["nCX_PerformanceMode"]						= "1",
 		["nCX_SrGameMode"]							= "Test Mode",
 		["nCX_HighPingLimit"]						= "50000",
+		["nCX_removeClientEntities"]				= "1",
+		["nCX_useInputRPGHandling"]				    = "1",
+		["nCX_removeClientEntities"]				= "1",
+		["nCX_removeClientEntities"]				= "1",
+		["nCX_removeClientEntities"]				= "1",
+		
+		--[[
+			pConsole->Register("nCX_highPingLimit", &nCX_HighPingLimit, 300, 0x00000080);
+	pConsole->Register("nCX_consoleSpace", &nCX_ConsoleSpace, 34, 0x00000080);
+	pConsole->Register("nCX_performanceValue", &nCX_PerformanceValue, 110, 0x00000080);
+	pConsole->Register("nCX_deathBulletMinDistance", &nCX_DeathBulletMinDistance, 30, 0x00000080);
+	pConsole->Register("nCX_vehicleCollisionRatio", &nCX_VehicleCollisionRatio, 0.0003f, 0x00000080);
+	pConsole->Register("nCX_ragdollTimer", &nCX_RagdollTimer, 1000.f, 0x00000080);
+
+	//shoot optimizations:
+	pConsole->Register("nCX_svShootLimiter", &nCX_SvShootLimiter, 1, 0x00000080);
+	pConsole->Register("nCX_svShootDistToHit", &nCX_SvShootDistToHit, 70.f, 0x00000080);
+	pConsole->Register("nCX_svShootDistToShooter", &nCX_SvShootDistToShooter, 200.f, 0x00000080);
+
+	//nCX AntiCheat
+	pConsole->Register("nCX_rmi_threshold", &nCX_rmi_threshold, 240, 0x00000080);
+	pConsole->Register("nCX_recoilTreshold", &nCX_RecoilTreshold, 0.0001f, 0x00000080);
+	pConsole->Register("nCX_remoteMeleeTreshold", &nCX_RemoteMeleeTreshold, 20.0f, 0x00000080);
+	pConsole->Register("nCX_remoteHitTreshold", &nCX_RemoteHitTreshold, 20.0f, 0x00000080);
+	//pConsole->Register("nCX_thresHoldVehicleSpeed", &nCX_ThresHoldVehicleSpeed, 180.0f, 0x00000080);
+	//pConsole->Register("nCX_useVehicleMovement", &nCX_VehicleMovement, 1, 0x00000080);
+
+	pConsole->Register("nCX_enableAmmoBoost", &nCX_EnableAmmoBoost, 1);
+	pConsole->Register("nCX_rpgNoDamageInfantry", &nCX_RpgNoDamageInfantry, 1, 0x00000080);
+	pConsole->Register("nCX_serverSpawnBullets", &nCX_ServerSpawnBullets, 1, 0x00000080);
+	pConsole->Register("nCX_EnableScoreboardNetInfo", &nCX_EnableScoreboardNetInfo, 1, 0x00000080);
+	pConsole->Register("nCX_removeClientEntities", &nCX_RemoveClientEntities, 1, 0x00000080);
+	pConsole->Register("nCX_useInputRPGHandling", &nCX_UseInputRPGHandling, 1, 0x00000080);
+
+	nCX_DestroyableArchetype = pConsole->RegisterString("nCX_DestroyableArchetype", "Props.food.melon", 0x00000080);
+	--]]
 		
 		["g_energy_scale_income"]   				= "0.4",
 		["v_lights_disable_time"]  					= "-1",
@@ -225,10 +259,6 @@ nCX.Config = {
 		["mesa x"] = "PowerStruggle";
 		["beach x"] = "PowerStruggle";
 		["plantation x"] = "PowerStruggle";
-		["savanna"] = "TeamInstantAction";
+		--["savanna"] = "TeamInstantAction";
 	},
-	GarbageEntities = {
-		"MusicPlayPattern","ReverbVolume","Light","ParticleEffect","TeamRandomSoundVolume","RandomSoundVolume","AmbientVolume","AmbientVolume","SoundEventSpot","Chickens","MusicMoodSelector","Birds","Frogs","Crabs","Fish","Turtles",
-		"MusicEndTheme", "Cloud", "FogVolume", "MusicThemeSelector","TagPoint","PrecacheCamera",--[["ProximityTrigger",]]"Plover","ParticleEffect",
-	};
 };

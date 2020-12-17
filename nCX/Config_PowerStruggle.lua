@@ -4,6 +4,8 @@ CryMP:SetConfig({
 	
 	RSE = true,
 	
+	Communicator = true,
+	
 	BanSystem = true,
 
 	ServerDefence = true,

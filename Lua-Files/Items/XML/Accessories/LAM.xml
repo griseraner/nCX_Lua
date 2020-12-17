@@ -1,4 +1,4 @@
-<item name="LAM" class="LAM" priority="111" >
+<item name="LAM" class="Item" priority="111" >
 	<params>
 		<param name="giveable" value="1" />
 		<param name="selectable" value="0" />

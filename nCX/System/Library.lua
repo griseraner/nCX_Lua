@@ -17,16 +17,26 @@ CryMP.Library = {
 			if (target.Info and target.Info.Channel == -2) then
 				for adminId, v in pairs(self.Spawned) do
 					if (v[target.id]) then
-						local pos = target:GetPos();
-						CryMP:SetTimer(2, function()
+						CryMP:SetTimer(15, function()
 							System.RemoveEntity(target.id);  -- remove bots 
-							nCX.ParticleManager("explosions.rocket_terrain.exocet", 0.3, pos, g_Vectors.up, 0);
+							nCX.ParticleManager("explosions.rocket_terrain.exocet", 0.3, target:GetPos(), g_Vectors.up, 0);
 						end);
 						break;
 					end
 				end
 			end
 		end,
+		
+		OnVehicleSpawn = function(self, vehicle)
+			if (vehicle and vehicle.ownerId) then
+				vehicle.vehicle:SetOwnerId(vehicle.ownerId);
+				vehicle.nCX:EnableInvulnerability(true);
+				CryMP:SetTimer(3, function()
+					vehicle.nCX:EnableInvulnerability(false);
+				end);
+			end
+		end,
+		
 	
 	},
 
@@ -181,6 +191,9 @@ CryMP.Library = {
 			return self:SpawnVehicle(player, distance, class, mod)
 		end
 		distance = distance and tonumber(distance) or 10;
+		if (class == "InteractiveEntity") then
+			distance = distance - 5;
+		end
 		local pos, dir = self:CalcSpawnPos(player, distance);
 		local ep = {
 			class = class;
@@ -191,6 +204,19 @@ CryMP.Library = {
 		};		
 		if (class == "GUI" and GUI) then
 			ep.name = GUI.Properties.objModel;
+		elseif (class == "InteractiveEntity") then
+			local cpos = pos;
+			cpos.z = cpos.z - 1.0;
+			local hits;-- = Physics.RayWorldIntersection(cpos,g_Vectors.down,15,ent_terrain+ent_static+ent_rigid+ent_sleeping_rigid,player.id,nil,g_HitTable);
+			if ( hits == 0 ) then
+				System.LogAlways("not hit found: "..ep.position.z);
+			else
+				local firstHit = g_HitTable[1];
+				if (firstHit) then
+					--ep.position.z = firstHit.pos.z;
+					--System.LogAlways("hit found: "..ep.position.z);
+				end
+			end	
 		end
 		local spawned = System.SpawnEntity(ep);
 		if (spawned) then
@@ -218,6 +244,15 @@ CryMP.Library = {
 				local c = {[1]=2,[2]=1,};
 				local teamId = c[nCX.GetTeam(player.id)] or 2;
 				nCX.SetTeam(teamId, spawned.id);
+			elseif (spawned.class == "InteractiveEntity") then
+				local physParam = {
+					mass = 200,
+				};
+				CryAction.CreateGameObjectForEntity(spawned.id);
+				CryAction.BindGameObjectToNetwork(spawned.id);
+				--CryAction.ForceGameObjectUpdate(spawned.id, true);
+				--spawned:Physicalize(0, PE_RIGID, physParam);
+				--spawned:AwakePhysics(1);
 			elseif (spawned.class == "AutoTurret") then
 				local physParam = {
 					mass = 200,
@@ -295,20 +330,20 @@ CryMP.Library = {
 				end
 			end
 		end	
-		CryMP:Spawn(ep, function(spawned)
-			local msg;
-			local name=player:GetName();
-			if (spawned) then
-			    msg = "Spawned class "..class.." for "..name..((mod and " with mod "..mod) or "");
-				self.Spawned[player.id]=self.Spawned[player.id] or {};
-				self.Spawned[player.id][spawned.id] = true;
-				spawned.vehicle:SetOwnerId(player.id);
-			else
-				msg = "Failed to spawn class "..class.." for "..name;
-			end
-			nCX.Log("Core", msg);
-			self:Log(msg, true);
-		end);
+		local spawned = nCX.Spawn(ep);
+		local msg;
+		local name=player:GetName();
+		if (spawned) then	
+			msg = "Spawned class "..class.." for "..name..((mod and " with mod "..mod) or "");
+			self.Spawned[player.id]=self.Spawned[player.id] or {};
+			self.Spawned[player.id][spawned.id] = true;
+			spawned.ownerId = player.id;
+		else
+			msg = "Failed to spawn class "..class.." for "..name;
+		end
+		nCX.Log("Core", msg);
+		self:Log(msg, true);
+
 		return true;
 	end,
 

@@ -43,7 +43,6 @@ for i, vehicle in pairs(VehicleSystem.VehicleImpls) do
 			---------------------------
 			OnShutDown = function(self)
 				nCX.RemoveSpawnGroup(self.id);
-				
 				--nCX 
 				if (self:IsRespawning() and self.class == "Asian_ltv") then
 					local mods = {"MP", "Gauss", "MP", "Unarmed"};
@@ -71,15 +70,17 @@ for i, vehicle in pairs(VehicleSystem.VehicleImpls) do
 		--		OnSpawn
 		---------------------------
 		OnSpawn = function(self)
+			--System.LogAlways(self:GetName().." ---> OnSpawn");
 			mergef(self, VehicleBase, 1);
 			self:SpawnVehicleBase();
 		end,
-		---------------------------
+		-------------
 		--		OnReset
 		---------------------------
 		OnReset = function(self)
 			CryAction.ActivateExtensionForGameObject(self.id, "VehicleExtension", false); --nCX TEST
 			CryAction.ActivateExtensionForGameObject(self.id, "VehicleExtension", true);	
+			--System.LogAlways(self:GetName().." ---> OnReset");
 			self:ResetVehicleBase();
 			local teamId = nCX.GetTeamId(self.Properties.teamName);
 			if (teamId and teamId ~= 0) then

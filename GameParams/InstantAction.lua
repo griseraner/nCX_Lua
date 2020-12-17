@@ -333,21 +333,6 @@ InstantAction = {
 				--if (player.actor:GetHealth() < 0 and player.actor:GetSpectatorMode() == 0 and player.actor:GetDeathTimeElapsed() > 5) then
 				--	self.Server.RequestSpectatorTarget(self, player.id, 1);
 				--end
-				if (player.Info.ID ~= -1 and not player.Validated) then
-					local channelId = player.Info.Channel;
-					CryMP:HandleEvent("OnConnect", {channelId, player, player.Info.ID, reset});
-					if (not reset) then
-						local restored = (nCX.GetSynchedEntityValue(player.id, 100) or 0) > 0;
-						local name = player:GetName();
-						local CC = player.Info.Country_Short;
-						if (not player:IsNomad() and CC ~= "EU") then
-							name = name.." ("..CC..")";
-						end
-						name = player:GetAccess() > 0 and "Premium "..name or name;
-						self.otherClients:ClClientConnect(channelId, name, restored);
-					end
-					player.Validated = true;
-				end
 			end
 			if (CryMP) then
 				CryMP:OnTimer(players);
@@ -484,7 +469,7 @@ InstantAction = {
 				nCX.RevivePlayer(player.id, pos, angles, clearInventory);
 			end
 		end
-		player:UpdateAreas();
+		--player:UpdateAreas();
 		--player.actor:SetSpectatorMode(0, NULL_ENTITY);
 		self:EquipPlayer(player);
 		CryMP:HandleEvent("OnRevive", {channelId, player, false, not nCX.Spawned[channelId]});
@@ -526,27 +511,9 @@ InstantAction = {
 		if (not punish) then
 			CryMP:HandleEvent("OnKill", {hit, shooter, target});
 			if (not hit.server) then
-				if (hit.self) then
-					--local suicides = (nCX.GetSynchedEntityValue(targetId, 106) or 0) + 1;
-					--nCX.SetSynchedEntityValue(targetId, 106, suicides);
-					--self:Award(shooter, 0, -1, 0);
-				elseif (shooter.actor) then
-					--local kills = (nCX.GetSynchedEntityValue(shooterId, 100) or 0) + 1;
-					--nCX.SetSynchedEntityValue(shooterId, 100, kills);
-					--if (hit.headshot) then
-					--	local headshots = (nCX.GetSynchedEntityValue(shooterId, 102) or 0) + 1;
-					--	nCX.SetSynchedEntityValue(shooterId, 102, headshots);
-					--end
-					--CryAction.SendGameplayEvent(shooter.id, 9, "kills", kills);
-					
-					self:CheckPlayerScoreLimit(shooter.id, kills);
-				end
-				if (target.actor) then
-					--local deaths = (nCX.GetSynchedEntityValue(targetId, 101) or 0) + 1;
-					--nCX.SetSynchedEntityValue(targetId, 101, deaths);
-					--CryAction.SendGameplayEvent(target.id, 9, "deaths", deaths); 
-					--self:Award(target, 1, 0, 0);
-				end				
+				if (not hit.self and shooter.actor) then
+					self:CheckPlayerScoreLimit(shooter.id);
+				end		
 			end
 		end
 	end,
@@ -554,37 +521,20 @@ InstantAction = {
 	--		OnKill -- called in C++
 	---------------------------
 	OnKill = function(self, hit)
-		System.LogAlways(hit.shooter:GetName().." | "..hit.target:GetName().." | "..(hit.type or -1).." | "..(hit.weapon and hit.weapon:GetName() or "n/A"));
+		--System.LogAlways(hit.shooter:GetName().." | "..hit.target:GetName().." | "..(hit.type or -1).." | "..(hit.weapon and hit.weapon:GetName() or "n/A"));
 		local shooter = hit.shooter or hit.target;
 		local target = hit.target;
 		target.suicide = hit.self;
 		local quit, hit = CryMP:HandleEvent("OnKill", {hit, shooter, target});
-		if (hit.self) then
-			--local suicides = (nCX.GetSynchedEntityValue(targetId, 106) or 0) + 1;
-			--nCX.SetSynchedEntityValue(targetId, 106, suicides);
-			--self:Award(shooter, 0, -1, 0);
-		elseif (shooter.actor) then
-			--local kills = (nCX.GetSynchedEntityValue(shooterId, 100) or 0) + 1;
-			--nCX.SetSynchedEntityValue(shooterId, 100, kills);
-			--if (hit.headshot) then
-			--	local headshots = (nCX.GetSynchedEntityValue(shooterId, 102) or 0) + 1;
-			--	nCX.SetSynchedEntityValue(shooterId, 102, headshots);
-			--end
-			--CryAction.SendGameplayEvent(shooter.id, 9, "kills", kills);
-			
-			self:CheckPlayerScoreLimit(shooter.id, kills);
-		end
-		--if (target.actor) then
-			--local deaths = (nCX.GetSynchedEntityValue(targetId, 101) or 0) + 1;
-			--nCX.SetSynchedEntityValue(targetId, 101, deaths);
-			--CryAction.SendGameplayEvent(target.id, 9, "deaths", deaths); 
-			--self:Award(target, 1, 0, 0);
-		--end	
+		if (not hit.self and shooter.actor) then
+			self:CheckPlayerScoreLimit(shooter.id);
+		end		
 	end,
 	---------------------------
 	--  CheckPlayerScoreLimit
 	---------------------------
-	CheckPlayerScoreLimit = function(self, playerId, score)
+	CheckPlayerScoreLimit = function(self, playerId)
+		local kills = (nCX.GetSynchedEntityValue(playerId, 100) or 0);
 		local fraglimit = tonumber(System.GetCVar("g_fraglimit"));
 		local fraglead = tonumber(System.GetCVar("g_fraglead"));
 		if ((fraglimit > 0) and (score >= fraglimit)) then
@@ -607,8 +557,6 @@ InstantAction = {
 	EquipPlayer = function(self, player)
 		local channelId = player.Info.Channel;
 		if (not nCX.PartyActive or nCX.PartyActive.Id ~= 4) then
-			nCX.GiveItem("Binoculars", channelId, false, false);
-			nCX.GiveItem("Parachute", channelId, false, false);
 			nCX.GiveItem("Silencer", channelId, false, false);
 			nCX.GiveItem("SOCOMSilencer", channelId, false, false);
 			nCX.GiveItem("LAMRifle", channelId, false, false);
@@ -663,14 +611,14 @@ InstantAction = {
 	---------------------------
 	ResetTeamScores = function(self)
 		for i, teamId in pairs(self.teamId) do
-			nCX.SetSynchedGlobalValue(10 + teamId, 0);
+			--nCX.SetSynchedGlobalValue(10 + teamId, 0);
 		end
 	end,
 	---------------------------
 	--  SetTeamScore
 	---------------------------
 	SetTeamScore = function(self, teamId, score)
-		nCX.SetSynchedGlobalValue(10 + teamId, score);
+		--nCX.SetSynchedGlobalValue(10 + teamId, score);
 		--self:CheckScoreLimit(teamId, score);
 	end,
 	---------------------------

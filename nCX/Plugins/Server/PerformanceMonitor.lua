@@ -7,7 +7,8 @@ PerformanceMonitor = {
 	Tick 			= 1,
 	DefaultMaxRate  = 60,
 	MinMaxRate 		= 5,
-
+	LastWarning		= 0,
+	
 	Server = {
 		
 		OnConnect = function(self, channelId, player, id, reset)
@@ -82,12 +83,21 @@ PerformanceMonitor = {
 		local mem = nCX.GetMemoryUsage();
 		local ping = nCX.GetAveragePing();
 		local count = nCX.GetPlayerCount();
+		local CPU = nCX.GetCPUUsage();
+		CPU = math.floor(CPU * 10)/10;
 		local soundWarning = false;
-		if (ping > 200 and nCX.GetPlayerCount() > 5) then
-			CryMP.Msg.Chat:ToAccess(3, "[Warning] Average ping ("..ping..") too high!");
-			self:Log("[$4Warning$9] System Status ("..current.."%, "..mem.."mb, $4"..ping.."$9)", true);
-			nCX.Log("Performance", "[Warning] Average Ping too high! System Status ("..current.."%, "..mem.."mb, "..ping..")", true);
-			--soundWarning = true;
+		if (self.LastWarning < 1) then
+			if (ping > 200 and nCX.GetPlayerCount() > 5) then
+				CryMP.Msg.Chat:ToAccess(3, "[Warning] Average ping ("..ping..") too high!");
+				self:Log("[$4Warning$9] System Status ("..current.." %, CPU "..CPU.." %, "..mem.."mb, $4"..ping.."$9)", true);
+				nCX.Log("Performance", "[Warning] Average Ping too high! System Status ("..current.."%, "..mem.."mb, "..ping..")", true);
+				self.LastWarning = 5;
+			elseif (CPU > 10) then
+				CryMP.Msg.Chat:ToAccess(3, "[Warning] DedicatedServer.exe ("..CPU.." %) usage too high!");
+				self:Log("[$4Warning$9] System Status (CPU "..CPU.." %, "..current.." %, "..mem.."mb, $4"..ping.."$9)", true);
+				nCX.Log("Performance", "[Warning] CPU Usage high! System Status (CPU "..CPU.." %, "..current.."%, "..mem.."mb, "..ping..")", true);
+				self.LastWarning = 5;
+			end
 		end
 		for i, player in pairs(players) do
 			local access = player:GetAccess();
@@ -111,7 +121,7 @@ PerformanceMonitor = {
 			local up, down = nCX.GetServerNetworkUsage();
 			for channelId, v in pairs(self.Monitor) do
 				if (v == 1) then
-					nCX.SendTextMessage(0, "PERFORMANCE ( "..current.."% ) MEMORY:USAGE ( "..mem.." mb ) PLAYERS ( "..count.." / "..maxp.." ) MAX:CHANNEL ( "..chan.." ) AVERAGE:PING ( "..ping.." ) NETWORK ( "..up.." / "..down.." )", channelId);				
+					nCX.SendTextMessage(0, "CPU( "..CPU.." % ) PERFORMANCE( "..current.." % ) MEM( "..mem.." mb ) PLAYERS( "..count.." / "..maxp.." ) MAX:CHAN( "..chan.." ) AVR:PING( "..ping.." ) NET( "..up.." / "..down.." )", channelId);				
 					--nCX.SendTextMessage(0, min.." | "..max, channelId);
 				else
 					local hull = string.rep("|", math.min(200, current));

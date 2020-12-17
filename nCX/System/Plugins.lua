@@ -144,7 +144,10 @@ CryMP.Plugins = {
 			self:Log("Activated plugin $3"..name.." $9"..(ok or ""), 5);
 		end
 		if (type(tbl.OnInit) == "function") then
-			pcall(tbl.OnInit, tbl);
+			local ok, err = pcall(tbl.OnInit, tbl);
+			if (not ok) then
+				System.LogAlways(name..":OnInit failed: "..err);
+			end
 		end
 		local config = CryMP.Config[name];
 		if (type(config) == "table") then

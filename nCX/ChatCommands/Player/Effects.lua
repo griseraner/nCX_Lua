@@ -26,7 +26,7 @@ CryMP.ChatCommands:Add("flare", {
 			{"range", Optional = true, Number = true, Info = "range in meters (1 - 300)",},
 		},
 		Delay = 30,
-		InGame = true,
+		--InGame = true,
 	},
 	function(self, player, channelId, distance)
 		local flarePos = player:GetWorldPos();
@@ -57,7 +57,7 @@ CryMP.ChatCommands:Add("fireworks", {
 			{"range", Optional = true, Number = true, Info = "range in meters (1 - 300)",},
 		}, 
 		Delay = 30,
-		InGame = true,
+		--InGame = true,
 		BigMap = true,
 	},
 	function(self, player, channelId, distance)

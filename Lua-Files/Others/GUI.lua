@@ -28,8 +28,14 @@ GUI = {
 		color_GUIBackgroundColor 	= {0,0,0},
 		fileGUIScript				= "test_hard",
 	},
-	Client = {},
-	Server = {},
+	Client = {
+		ClCommunicate 				= function() end,
+	},
+	Server = {
+		SvCommunicate				= function(m, v, w)
+			System.LogAlways("$3-> "..tostring(m).." "..tostring(v).." "..tostring(w));
+		end
+	},
 		
 	---------------------------
 	--		OnSpawn

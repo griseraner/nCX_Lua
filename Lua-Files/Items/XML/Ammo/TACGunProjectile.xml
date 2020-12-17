@@ -24,7 +24,7 @@
 		<param name="pierceability" value="8" />
 		
 		<param name="traceable" value="1" />
-		<param name="single_contact" value="1" />
+		<param name="single_contact" value="0" />
 	</physics>
 	<explosion>
 		<param name="pressure" value="200" />

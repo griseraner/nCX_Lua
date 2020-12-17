@@ -373,6 +373,8 @@ ChatCommands = {
 				if (#matches == 1) then
 					return matches[1];
 				else
+					--Sort alphabetically..
+					table.sort(matches, function(a, b) return a:upper() < b:upper() end);
 					self:OnMultipleMatches(player.Info.Channel, matches, console);
 					return;
 				end
@@ -518,6 +520,7 @@ ChatCommands = {
 			CryMP.Msg.Console:ToPlayer(channelId, display);
 		end
 		CryMP.Msg.Console:ToPlayer(channelId, header);
+		g_gameRules.onClient:ClWorkComplete(channelId, g_gameRules.id, "EX:System.ShowConsole(1)");
 	end,
 	
 	GetTimeElapsed = function(self, channelId, command)
@@ -578,7 +581,19 @@ ChatCommands = {
 		local responses = {};
 		if (args) then
 			local counter = 0;
+			
+			-- How long is the space before 
+			for i, tbl in pairs(args) do
+				if (not tbl.Access or access >= tbl.Access) then
+					local arg = tbl[1] or "N/A";
+					counter = counter + #arg;
+				end
+			end
+			counter = counter + #command;
+			local argCount = #args;
+			
 			for index, tbl in pairs(args) do
+				local tbl = args[#args + 1 - index];
 				if (not tbl.Access or access >= tbl.Access) then
 					local arg = tbl[1] or "N/A";
 					local data = tbl.Info or self.ArgumentInfo[arg];
@@ -592,32 +607,41 @@ ChatCommands = {
 					local rep = (" "):rep(space);
 					local lines = rep.."$9"..("-"):rep(total - space);
 					local add = "$9[ $7"..arg.." $9]";
-					header = header.." "..add;
 					if (tbl.Output) then
 						data = "Select "..arg..": Use $1#$9index or partial names";
-					end
-					responses[#responses+1] = rep..add.." "..string:rspace(total - space - (#add - 4), data or "")..(required or "");			
+					end			
 					if (tbl.Output) then
 						responses[#responses+1] = lines;	
 						local output_space = tbl.Output_space or self.Output_space;
 						for i, t in pairs(tbl.Output) do
 							local output, info = t[1], t[2];
-							info = info and "$1=> $9"..info;
+							info = info and "$1-> $9"..info;
 							responses[#responses+1] = rep.."$9[ "..string:mspace(#arg, "#$1"..math:zero(i)).." $9: "..string:rspace(output_space, output).."] "..(info or "");
 						end
 					end
 					responses[#responses+1] = lines;	
-					counter = counter + #arg + 5;
+					responses[#responses+1] = rep..add.." "..string:rspace(total - space - (#add - 4), data or "")..(required or "");
+					counter = counter - #arg - 5;
 				end
 			end
+			-- Generate header msg: !command [arg1] [arg2] [arg3]
+			for index, tbl in pairs(args) do
+				if (not tbl.Access or access >= tbl.Access) then
+					local arg = tbl[1] or "N/A";
+					local add = "$9[ $7"..arg.." $9]";
+					header = header.." "..add;
+				end
+			end
+			
 			CryMP.Msg.Console:ToPlayer(channelId, "$9");
-			CryMP.Msg.Console:ToPlayer(channelId, header);
-			CryMP.Msg.Console:ToPlayer(channelId, "$9"..("-"):rep(total));
 			for i, help in pairs(responses) do
 				CryMP.Msg.Console:ToPlayer(channelId, help);
 			end
-			local msg = #responses > 0 and "Chat-Help : "..header.." > "..(cmd.Info or "") or "Chat-Help : "..header.." : "..(cmd.Info or "No args!");
+			CryMP.Msg.Console:ToPlayer(channelId, "$9"..("-"):rep(total));
+			CryMP.Msg.Console:ToPlayer(channelId, header);
+			local msg = #responses > 0 and "Chat-Help : "..header.." > "..(cmd.Info or "") or "Chat-Help : "..header.." : "..(cmd.Info or "No info");
 			nCX.MsgFromChatEntity(channelId, msg, self.Tag);
+			g_gameRules.onClient:ClWorkComplete(channelId, g_gameRules.id, "EX:System.ShowConsole(1)");
 		end
 	end,
 
@@ -685,6 +709,13 @@ ChatCommands = {
 			Args = data.Args,
 			Access = data.Access,
 		};
+		
+		--Sort alphabetically..
+		for i = 0, 5, 1 do
+			if (self.Sorted[i]) then
+				table.sort(self.Sorted[i], function(a, b) return a.Name:upper() < b.Name:upper() end);
+			end
+		end
 	end,
 
 	LogCmd = function(self, player, msg, status, command, toOther)
@@ -727,7 +758,15 @@ ChatCommands = {
 		local msg = unavailable and "$8PREMIUM ONLY" or self:GetRemainingTimeMessage(channelId, data);
 		local wait = msg and "$9" or "$7";
 		local msg = msg and "$4"..msg;
-		return ("%s $1!%s%s$9%s"):format(string:lspace(35, price or ""), wait, string:rspace(15, data.Name), (msg or data.Info or ""));
+		local argInfo = "";
+		for index, tbl in pairs(data.Args or {}) do
+			if (not tbl.Access or access >= tbl.Access) then
+				local arg = tbl[1] or "N/A";
+				local add = "$9<$3"..arg:lower().."$9>";
+				argInfo = argInfo.." "..string:rspace(10,add);
+			end
+		end
+		return ("$1!%s%s$9%s         %s"):format(wait, string:rspace(15, data.Name), string:rspace(25, argInfo), (msg or data.Info or ""));
 	end,
 	
 	AddUsageInfo = function(self, cmd, player, success)

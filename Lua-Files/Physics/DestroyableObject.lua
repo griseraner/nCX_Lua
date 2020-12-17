@@ -79,8 +79,7 @@ DestroyableObject = {
 			bRigidBodyAfterDeath = 1,																-- True if rigid body after death too.
 			bActivateOnDamage = 0,																	-- Activate when a rocket hit the entity.
 			Density = -1,
-			--Mass = -1,
-			Mass = 60,
+			Mass = -1,
 			bPushableByPlayers = 1,
 			bCanBreakOthers = 1,
 			Simulation = {
@@ -103,6 +102,8 @@ DestroyableObject = {
 			--CryAction.BindGameObjectToNetwork(self.id);
 			--CryAction.ForceGameObjectUpdate(self.id, true);
 			self:PreLoadParticleEffect( self.Properties.Explosion.Effect );
+			
+			nCX.CreateEntityRespawnData(self.id);
 		end,
 		---------------------------
 		--		OnTimer
@@ -132,6 +133,9 @@ DestroyableObject = {
 				self:RemoveEffect();
 				self:Explode();
 				self.dead = true;
+				
+				nCX.ScheduleEntityRemoval(self.id, 20);
+				nCX.ScheduleEntityRespawn(self.id, true, 10);
 			end,
 		},
 	
@@ -155,7 +159,7 @@ DestroyableObject = {
 		if (hit.explosion) then pass = NumberToBool(vul.bExplosion);
 		elseif (hit.type=="collision") then pass = NumberToBool(vul.bCollision); damage = damage * mult.fCollision;
 		elseif (hit.type=="bullet") then pass = NumberToBool(vul.bBullet); damage = damage * mult.fBullet;
-		elseif (hit.type=="melee") then pass = NumberToBool(vul.bMelee); 
+		elseif (hit.type=="melee") then return; -- pass = NumberToBool(vul.bMelee); 
 		else pass = NumberToBool(vul.bOther); end	
 		pass = pass and damage > self.Properties.fDamageTreshold;	-- damage needs to be higher than treshold
 		if (pass and NumberToBool(self.Properties.bPlayerOnly) and
@@ -326,8 +330,6 @@ DestroyableObject = {
 	---------------------------	
 	PhysicalizeThis = function(self, nSlot )
 		local Physics = self.Properties.Physics;
-		self.Properties.Physics.Mass = 60; 
-		--System.LogAlways(self:GetName().." | mass "..self.Properties.Physics.Mass);
 		EntityCommon.PhysicalizeRigid( self,nSlot,Physics,self.bRigidBodyActive );
 	end,
 	---------------------------
@@ -405,15 +407,12 @@ DestroyableObject = {
 	--		Die
 	---------------------------	
 	Die = function(self, shooterId)
-		if (self:IsDead()) then
-			return;
-		end
 		self.shooterId = shooterId;
 		self.dead = true;
 		if (self.health > 0) then
 			self.health = 0;
 		end
-		--self:PlaySoundEvent(self.Properties.Sounds.sound_Dying,g_Vectors.v000,g_Vectors.v001,0,SOUND_SEMANTIC_MECHANIC_ENTITY);
+		self:PlaySoundEvent(self.Properties.Sounds.sound_Dying,g_Vectors.v000,g_Vectors.v001,0,SOUND_SEMANTIC_MECHANIC_ENTITY);
 		if (not self.exploded) then
 			local explosion=self.Properties.Explosion;
 			if(explosion.Delay>0 and not explosion.DelayEffect.bHasDelayEffect==1)then

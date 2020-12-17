@@ -4,7 +4,7 @@
 CryMP.ChatCommands:Add("spawn", {
 		Access = 3, 
 		Args = {
-			{"class", Output = {{"Asian_aaa",},{"Asian_apc",},{"Asian_helicopter",},{"Asian_ltv",},{"Asian_patrolboat",},{"Asian_tank",},{"Asian_truck",},{"Civ_car1",},{"Civ_speedboat",},{"GUI",},{"Shark",},{"ShiTen",},{"Tornado",},{"US_apc",},{"US_asv",},{"US_hovercraft",},{"US_ltv",},{"US_smallboat",},{"US_tank",},{"US_trolley",},{"US_vtol",},{"WarriorMOARTurret"},{"AlienTurret",},{"AutoTurret",},},},
+			{"class", Output = {{"Player",},{"Grunt",},{"Asian_aaa",},{"Asian_apc",},{"Asian_helicopter",},{"Asian_ltv",},{"Asian_patrolboat",},{"Asian_tank",},{"Asian_truck",},{"Civ_car1",},{"Civ_speedboat",},{"GUI",},{"InteractiveEntity",},{"Shark",},{"ShiTen",},{"Tornado",},{"US_apc",},{"US_asv",},{"US_hovercraft",},{"US_ltv",},{"US_smallboat",},{"US_tank",},{"US_trolley",},{"US_vtol",},{"WarriorMOARTurret"},{"AlienTurret",},{"AutoTurret",},},},
 			{"mod", Optional = true, Info = "Vehicle modification"},
 			{"distance", Optional = true, Number = true, Info = "Distance in meters"},
 		}, 

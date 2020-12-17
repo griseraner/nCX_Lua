@@ -9,9 +9,9 @@
 	</flags>
 	<physics type="particle">
 		<param name="mass" value="0.25"/>
-		<param name="speed" value="100"/> <!-- 200 -->
+		<param name="speed" value="120"/> <!-- 200 -->
 		<param name="radius" value="0.2"/>
-		<param name="air_resistance" value="1"/> <!-- 0 -->
+		<param name="air_resistance" value="0"/> 
 		<param name="water_resistance" value="0.5"/>
 		<param name="gravity" value="0, 0, -0.5"/>  <!-- 0.5 -->
 		<param name="water_gravity" value="0, 0, -0.5"/>

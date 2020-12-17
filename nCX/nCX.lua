@@ -17,7 +17,12 @@ OnInit = function()
 end
 
 --> Remove synching
-local CVars = io.open(nCX.ROOT.."Game/Server/nCX/CVars.txt", "r");
+local CVars = io.open(nCX.ROOT.."Game/Server/nCX/CVars.cfg", "r");
+if (not CVars) then
+	System.ExecuteCommand("sys_dump_cvars");
+	CVars = io.open(nCX.ROOT.."Game/Server/nCX/CVars.cfg", "r");
+end
+
 if (CVars) then
 	local us, sy = 0, 0;
 	for CVar in CVars:lines() do
@@ -63,7 +68,7 @@ end
 ---------------------------
 function nCX:Bootstrap(reload)
     if (not reload) then
-    	self:RemoveGarbageEnts();
+    --	self:RemoveGarbageEnts();
 	end
 	local port = System.GetCVar("sv_port");
 	self.ProMode = port == 50020 or port == 50030;
@@ -93,6 +98,12 @@ function nCX:Bootstrap(reload)
 	CryMP:Initialize(reload);	
 end
 
+---------------------------
+--		OnVehicleSpawn
+---------------------------
+function nCX:OnVehicleSpawn(vehicle)
+	CryMP:HandleEvent("OnVehicleSpawn", {vehicle});
+end
 ---------------------------
 --		CheatControl
 ---------------------------

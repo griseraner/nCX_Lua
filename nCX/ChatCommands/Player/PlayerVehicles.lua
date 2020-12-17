@@ -205,24 +205,26 @@ CryMP.ChatCommands:Add("taxi", {
 			self.Taxis[channelId] = nil;
 		end
 		--CryMP.Ent:GetFactory(player.id).onClient:ClVehicleBuildStart(channelId, "Taxi", player.id, nCX.GetTeam(player.id), 1, 1)
-		player.TAXI_PROCESSING = true;
-		CryMP:Spawn(params, function(vehicle)
-			if (vehicle) then
-				vehicle:EnterVehicle(player.id, 1);
-				--local factory = CryMP.Ent:GetFactory(player.id);
-				--if (factory) then
-					--factory.onClient:ClVehicleBuilt(channelId, "Taxi", player.id, player.id, nCX.GetTeam(player.id), 0);	
-				--end
+		local vehicle = nCX.Spawn(params);
+		if (vehicle) then
+		--	vehicle.nCX:
+			CryMP:DeltaTimer(2, function()
+				vehicle.vehicle:EnterVehicle(player.id, 1);
 				nCX.SetTeam(nCX.GetTeam(player.id), vehicle.id);
-				--nCX.AddSpawnGroup(vehicle.id);
-				--g_gameRules:MakeBuyZone(vehicle, 13, 13)
-				self.Taxis[channelId] = vehicle.id;
-				player.TAXI_PROCESSING = nil;
-			end
-		end);
-		nCX.SendTextMessage(3, "::: ! 7OXICITY.TAXI.COMPANY ! :::", channelId);
-		nCX.ParticleManager("misc.emp.sphere", 0.5, {pos.x,pos.y,pos.z+height}, g_Vectors.up, 0);
-		return true;
+			end);
+			--local factory = CryMP.Ent:GetFactory(player.id);
+			--if (factory) then
+				--factory.onClient:ClVehicleBuilt(channelId, "Taxi", player.id, player.id, nCX.GetTeam(player.id), 0);	
+			--end
+			--nCX.AddSpawnGroup(vehicle.id);
+			--g_gameRules:MakeBuyZone(vehicle, 13, 13)
+			self.Taxis[channelId] = vehicle.id;
+			
+			nCX.SendTextMessage(3, "::: ! 7OXICITY.TAXI.COMPANY ! :::", channelId);
+			nCX.ParticleManager("misc.emp.sphere", 0.5, {pos.x,pos.y,pos.z+height}, g_Vectors.up, 0);
+			return true;
+		end
+		return false, "error spawn";
 	end
 );
 

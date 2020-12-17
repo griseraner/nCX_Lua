@@ -113,6 +113,8 @@ Player = {
 		MoveTo			= function() end,
 		AlignTo			= function() end,
 		ClearInventory	= function() end,
+		
+		SetCustomModel	= function() end,
 	},
 	Server = {
 		---------------------------
@@ -145,7 +147,7 @@ Player = {
 	OnReset = function(self)
 		BasicActor.Reset(self);
 		self.actor:ActivateNanoSuit(1);
-		self:SetCloakType(1)
+		self:SetCloakType(1);
 	end,
 	---------------------------
 	--      SetOnUseData
@@ -305,29 +307,29 @@ local BasicActorParams = {
 mergef(Player, BasicActorParams, true);
 mergef(Player, BasicActor, true);
 
-function Player:Expose()
-	Net.Expose{
-		Class = self,
-		ClientMethods = {
-			Revive				= { RELIABLE_ORDERED, POST_ATTACH },
-			MoveTo				= { RELIABLE_ORDERED, POST_ATTACH, VEC3 },
-			AlignTo				= { RELIABLE_ORDERED, POST_ATTACH, VEC3 },
-			ClearInventory		= { RELIABLE_ORDERED, POST_ATTACH },
-		},
-		ServerMethods = {},
-		ServerProperties = {}
-	};
-	System.LogAlways("$4Net.Expose");
-end
+local CryMP_Enhanced = false; --tonumber(System.GetCVar("cl_crymp")) == 2;
 
-Net.Expose {
+local NetSetup = {
 	Class = Player,
 	ClientMethods = {
-		Revive				= { RELIABLE_ORDERED, POST_ATTACH },
-		MoveTo				= { RELIABLE_ORDERED, POST_ATTACH, VEC3 },
-		AlignTo				= { RELIABLE_ORDERED, POST_ATTACH, VEC3 },
-		ClearInventory		= { RELIABLE_ORDERED, POST_ATTACH },
+		Revive				= { RELIABLE_ORDERED, NO_ATTACH },
+		MoveTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+		AlignTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+		ClearInventory		= { RELIABLE_ORDERED, NO_ATTACH },
 	},
 	ServerMethods = {},
 	ServerProperties = {}
 };
+
+if (CryMP_Enhanced) then
+	NetSetup.ClientMethods.SetCustomModel = { RELIABLE_ORDERED, NO_ATTACH, STRING, VEC3, BOOL };
+	System.LogAlways("$4[CryMP_Enhanced] $9Loading custom player.lua RMIs");
+else
+	NetSetup.ClientMethods.SetCustomModel = nil;
+	System.LogAlways("$4[CryMP_Enhanced] $9Loading default player.lua RMIs");
+end
+
+Net.Expose(NetSetup);
+
+		
+

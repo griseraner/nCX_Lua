@@ -1,5 +1,12 @@
 local CL_VERSION = "3.0";
 
+local function GetPrice(a)
+	if (g_gameRules.GetPrice) then
+		return g_gameRules:GetPrice(a);
+	end
+	return 0;
+end
+
 local tbl = {
 	--Scripts
 	ActorOnHit = [[
@@ -268,12 +275,17 @@ local tbl = {
 	Check = [[
 		function nCX:Check(gr,ff)
 			local GL=g_localActor;local GLId=g_localActorId;
-			local item = GL and GL.inventory and GL.inventory:GetCurrentItem();
 			if (self.Thrusters and self.OnThrusters) then
 				self:OnThrusters(ff);
 			end
-			if (self.M_Check) then 
-				self:M_Check(ff);
+			if (not GL.L_REP or _time - GL.L_REP > 1) then
+				if (self.M_Check) then 
+					self:M_Check();
+				end
+				GL.L_REP=_time;
+			end
+			if (self.RagdollSync) then 
+				self:RagdollSync(ff);
 			end
 			if (self.W_Check) then 
 				self:W_Check(ff);
@@ -281,7 +293,7 @@ local tbl = {
 			if (self.R_Check) then
 				self:R_Check(ff);
 			end
-			local pp = System.GetEntitiesByClass("DebugGun") or {};
+			local pp = System.GetEntitiesByClass("DebugGuns") or {};
 			for i, p in pairs(pp) do p.item:Select(false); end
 			if (tonumber(System.GetCVar("cl_bob"))~=1)then
 				System.SetCVar("cl_bob","1");
@@ -289,6 +301,7 @@ local tbl = {
 			if (tonumber(System.GetCVar("g_enableAlternateIronSight"))~=1) then
 				System.SetCVar("g_enableAlternateIronSight","1");
 			end 
+			if (nCX.Performance)then nCX:Performance()end
 		end		
 	]],
 	
@@ -434,7 +447,19 @@ local tbl = {
 			if (p.CM and p.CM<3) then
 				teamId=1;
 			end
-			local S;
+			local S = nCX.GetSP and nCX:GetSP(e,p);
+			if(S)then 
+				nCX:PSE(p,S);
+			end
+		end
+	]],
+	
+	GetSP = [[
+		function nCX:GetSP(e,p)
+			local f,S;
+			local gg=g_gameRules.game;
+			local mr=math.random;
+			local teamId=gg:GetTeam(p.id);
 			if (e=="reload") then
 				local ent=System.GetEntitiesInSphereByClass(g_localActor:GetPos(),30,"Player");
 				if (ent and #ent > 0) then
@@ -447,7 +472,7 @@ local tbl = {
 				end
 			else
 				local c=p.CM;
-				local f="ai_marine_2";
+				f="ai_marine_2";
 				if(c==3)then
 					f="ai_jester";
 				elseif(c==4)then
@@ -485,17 +510,17 @@ local tbl = {
 						end
 					end
 				end
-				if (S) then
-					S=f.."/"..S;
-				end
 			end
-			if(S)then 
-				nCX:PSE(p,S);
+			if (S) then
+				S= f and f.."/"..S or S;
+				return S;
 			end
 		end
 	]],
 	
-	OnReload  = [[function nCX:OnEvent(a,b,c,d,e,f,g,h,i,j)local k=nCX:GP(a)if not k then return end;local l=g_gameRules.game;local m=math.random;local n=l:GetTeam(k.id)if b=="d_imp"then local o=nCX:GP(c)local p={x=e,y=f,z=g}local q=math.min(2000,d*20)local r={x=h,y=i,z=j+1}end;if b=="defibrillate"then local o=nCX:GP(c)System.LogAlways("Channel "..(c or"NONE").." ")g_gameRules.work_name="Rebooting "..(o and o:GetName()or"Dafuq Player not found").."'s Nanosuit"HUD.SetProgressBar(true,0,g_gameRules.work_name)return end;if k.CM and k.CM<3 then n=1 end;local s;if b=="reload"then local t=System.GetEntitiesInSphereByClass(g_localActor:GetPos(),30,"Player")if t and#t>0 then for u,b in pairs(t)do if b.id~=g_localActorId and l:GetTeam(b.id)==n then s=n==1 and"ai_korean_soldier_2_eng/reloading_0"..m(0,5)or"ai_marine_3/reloading_0"..m(0,5)break end end end else local v=k.CM;local w="ai_marine_2"if v==3 then w="ai_jester"elseif v==4 then w="ai_marine_3"elseif v==5 then w="ai_psycho"elseif v==6 then w="ai_prophet"end;if b=="gunner"then s="mountedweapon_0"..m(0,3)else local x=n==1;if x or b=="scream"then w=(v==1 or b=="scream")and"ai_kyong"or"ai_korean_soldier_2_eng"end;if b=="teamfire"then s=n==1 and"surprise_0"..m(0,8)or"friendlyfire_0"..m(0,5)elseif b=="plant"then if v==1 then s="contactsoloback_0"..m(0,5)else s="explosionimminent_0"..m(0,3)end elseif b=="grenade"then s="grenade_0"..m(0,4)elseif b=="scream"then s="fallingdeath_0"..m(0,3)end;if x then if b=="selectnuke"then s="contactsoloclose_03"elseif x and b=="blind"then s="blind_0"..m(0,4)end end end;if s then s=w.."/"..s end end;if s then nCX:PSE(k,s)end end]],
+	--OnEvent = [[function nCX:OnEvent(a,b,c,d,e,f,g,h,i,j)local k=nCX:GP(a)if not k then return end;local l=g_gameRules.game;local m=math.random;local n=l:GetTeam(k.id)if b=="d_imp"then local o=nCX:GP(c)local p={x=e,y=f,z=g}local q=math.min(2000,d*20)local r={x=h,y=i,z=j+1}end;if b=="assist"then HUD.BattleLogEvent(eBLE_Currency,"Assist (+ "..(c and c or 0).." prestige points)")return end;if b=="defibrillate"then local o=nCX:GP(c)g_gameRules.work_name="Rebooting "..(o and o:GetName()or"Dafuq Player not found").."'s Nanosuit"HUD.SetProgressBar(true,0,g_gameRules.work_name)return end;if b=="hqhit"then local o=System.GetEntityByName(n==1 and"HQ_US"or"HQ_NK")local d=o and o:GetHealth()local s=n==l:GetTeam(g_localActorId)HUD.BattleLogEvent(s and eBLE_Currency or eBLE_Warning,k:GetName().." has severely damaged "..(s and"our HQ."or"the Enemy HQ"))return end;if k.CM and k.CM<3 then n=1 end;local t;if b=="reload"then local u=System.GetEntitiesInSphereByClass(g_localActor:GetPos(),30,"Player")if u and#u>0 then for v,b in pairs(u)do if b.id~=g_localActorId and l:GetTeam(b.id)==n then t=n==1 and"ai_korean_soldier_2_eng/reloading_0"..m(0,5)or"ai_marine_3/reloading_0"..m(0,5)break end end end else local w=k.CM;local x="ai_marine_2"if w==3 then x="ai_jester"elseif w==4 then x="ai_marine_3"elseif w==5 then x="ai_psycho"elseif w==6 then x="ai_prophet"end;if b=="gunner"then t="mountedweapon_0"..m(0,3)else local y=n==1;if y or b=="scream"then x=(w==1 or b=="scream")and"ai_kyong"or"ai_korean_soldier_2_eng"end;if b=="teamfire"then t=n==1 and"surprise_0"..m(0,8)or"friendlyfire_0"..m(0,5)elseif b=="plant"then if w==1 then t="contactsoloback_0"..m(0,5)else t="explosionimminent_0"..m(0,3)end elseif b=="grenade"then t="grenade_0"..m(0,4)elseif b=="scream"then t="fallingdeath_0"..m(0,3)end;if y then if b=="selectnuke"then t="contactsoloclose_03"elseif y and b=="blind"then t="blind_0"..m(0,4)end end end;if t then t=x.."/"..t end end;if t then nCX:PSE(k,t)end end]],
+	
+	--OnReload  = [[function nCX:OnEvent(a,b,c,d,e,f,g,h,i,j)local k=nCX:GP(a)if not k then return end;local l=g_gameRules.game;local m=math.random;local n=l:GetTeam(k.id)if b=="d_imp"then local o=nCX:GP(c)local p={x=e,y=f,z=g}local q=math.min(2000,d*20)local r={x=h,y=i,z=j+1}end;if b=="defibrillate"then local o=nCX:GP(c)System.LogAlways("Channel "..(c or"NONE").." ")g_gameRules.work_name="Rebooting "..(o and o:GetName()or"Dafuq Player not found").."'s Nanosuit"HUD.SetProgressBar(true,0,g_gameRules.work_name)return end;if k.CM and k.CM<3 then n=1 end;local s;if b=="reload"then local t=System.GetEntitiesInSphereByClass(g_localActor:GetPos(),30,"Player")if t and#t>0 then for u,b in pairs(t)do if b.id~=g_localActorId and l:GetTeam(b.id)==n then s=n==1 and"ai_korean_soldier_2_eng/reloading_0"..m(0,5)or"ai_marine_3/reloading_0"..m(0,5)break end end end else local v=k.CM;local w="ai_marine_2"if v==3 then w="ai_jester"elseif v==4 then w="ai_marine_3"elseif v==5 then w="ai_psycho"elseif v==6 then w="ai_prophet"end;if b=="gunner"then s="mountedweapon_0"..m(0,3)else local x=n==1;if x or b=="scream"then w=(v==1 or b=="scream")and"ai_kyong"or"ai_korean_soldier_2_eng"end;if b=="teamfire"then s=n==1 and"surprise_0"..m(0,8)or"friendlyfire_0"..m(0,5)elseif b=="plant"then if v==1 then s="contactsoloback_0"..m(0,5)else s="explosionimminent_0"..m(0,3)end elseif b=="grenade"then s="grenade_0"..m(0,4)elseif b=="scream"then s="fallingdeath_0"..m(0,3)end;if x then if b=="selectnuke"then s="contactsoloclose_03"elseif x and b=="blind"then s="blind_0"..m(0,4)end end end;if s then s=w.."/"..s end end;if s then nCX:PSE(k,s)end end]],
 	
 	OnThrusters = [[
 		nCX=nCX or {};
@@ -653,19 +678,85 @@ local tbl = {
 			GL.L_REP=_time;
 		end]]
 		
-		---> flags: 1.84715e+008
+		---> flags: 1.84715e+008   						e:AddImpulse(-1, ePos, dir, 300, 1);
+	
+	--							e:AddImpulse(-1, ePos, dir, 1200*ft, 1);
+	
+	-- and (e.LAST_VELOCITY > 15
+	--PHYSICPARAM_SIMULATION
+	--e:SetPhysicParams(PHYSICPARAM_VELOCITY,{v=dir});
+	--e:SetWorldPos(aPos);
+	--e:SetPhysicParams(PHYSICPARAM_SIMULATION,{freefall_gravity={x=0,y=0,z=0},);
+	--[[
+							local distance=e:GetDistance(as.id);
+						if (distance > 1 and (not e.LAST_DISTANCE or distance > e.LAST_DISTANCE) and e.LAST_VELOCITY > 3) then
+							System.LogAlways("SetVel -> dist -> "..distance.." - last Dist ("..(e.LAST_DISTANCE and e.LAST_DISTANCE or -1)..")");
+							e:SetWorldPos(aPos);
+							e.LAST_VELOCITY=0;
+						else
+							
+						end]]
+	
+	RagdollSync = [[
+		function nCX:RagdollSync(ft)
+			local GL=g_localActor;local GLId=g_localActorId;
+			for id, s in pairs(nCX.Ragdolls or {}) do
+				local e=System.GetEntity(id);
+				if (e and e.actor:GetPhysicalizationProfile()=="ragdoll") then
+					if (not s.Ragdoll) then
+						s.Ragdoll = true;
+						e.LAST_DISTANCE=nil;
+						e:SetCharacterPhysicParams(PHYSICPARAM_SIMULATION,{freefall_gravity={x=0,y=0,z=0},gravity={x=0,y=0,z=0}});
+					end
+					local as=(s.ID and System.GetEntity(s.ID));
+					if (not as) then
+						as=System.GetEntityByName("nCX_Assault_"..e.actor:GetChannel());
+						if (as) then 
+							s.ID=as.id;
+							System.LogAlways("Setting first time helper "..as:GetName());
+						end
+					end
+					if (as) then
+						local ePos=e:GetCenterOfMassPos();
+						local dir={};
+						local aPos=as:GetWorldPos();
+						aPos.z = aPos.z - 1;
+						SubVectors(dir, aPos,ePos);
+						dir=NormalizeVector(ScaleVector(dir, 1));
+						e.LAST_POS=e.LAST_POS or ePos;
+						local d=e.LAST_POS;
+						e.LAST_VELOCITY=(e.LAST_VELOCITY or 0) + 1;
+						
+						local blendSpeed = 150 * ft;
+						d.x = Interpolate(d.x, aPos.x, blendSpeed);
+						d.y = Interpolate(d.y, aPos.y, blendSpeed);
+						d.z = Interpolate(d.z, aPos.z, blendSpeed);
+						e.LAST_POS=d;
+	
+						e.LAST_DISTANCE = distance;
+					
+					else
+						nCX.Ragdolls[id]=nil;
+						HUD.BattleLogEvent(eBLE_Warning, "Lost entity nCX_Assault_"..e.actor:GetChannel());
+					end
+				elseif (not e or s.Ragdoll) then
+					nCX.Ragdolls[id]=nil;
+				end
+			end
+		end
+	]],
 	
 	MovementCheck = [[
 		function nCX:M_Check(ff)
 			local GL=g_localActor;local GLId=g_localActorId;
-			if (GL.L_REP and _time - GL.L_REP < 1) or (GL:IsDead() or GL.actor:GetSpectatorMode()~=0) then
+			if (GL:IsDead() or GL.actor:GetSpectatorMode()~=0) then
 				GL.sDetect=0;GL.sDetect2=0;
 				return;
 			end
 			local FLY=GL.actor:IsFlying();
 			local speed=GL:GetSpeed();
 			if (FLY and speed == 0) then
-			
+				
 			else 
 				local cSA = tonumber(System.GetCVar("g_suitSpeedMultMultiplayer"));
 				if (speed > (1 / math.max(cSA, 0.3) * 13)) then
@@ -749,6 +840,55 @@ local tbl = {
 		end
 	]],
 	
+	PatchInteractiveEntities = [[
+		System.AddCCommand("gotointeractive", "gotointeractive()", "");
+		function gotointeractive()
+			local e = System.GetEntitiesByClass("InteractiveEntity")[math.random(#System.GetEntitiesByClass("InteractiveEntity"))];
+			g_localActor:SetWorldPos(e:GetPos());
+			System.LogAlways("goto "..e:GetName());
+		end
+		if(not InteractiveEntity)then
+			Script.ReloadScript("Scripts/Entities/Others/InteractiveEntity.lua");
+		end
+		InteractiveEntity.Properties.OnUse = {
+			fUseDelay = 0,
+			fCoolDownTime = 1,
+			bEffectOnUse = 1,
+			bSoundOnUse = 1,
+			bSpawnOnUse = 1,
+			bChangeMatOnUse = 1,
+		};
+		function InteractiveEntity:OnUsed(user, idx)
+			local UseProps=self.Properties.OnUse;
+			if (self.bCoolDown==0)then
+				if(self.iDelayTimer== -1)then
+					if(UseProps.fUseDelay>0)then
+						self.iDelayTimer=Script.SetTimerForFunction(UseProps.fUseDelay*1000,"InteractiveEntity.Use",self);
+					else
+						self:Use(user, 1);
+						nCX:TS(83);
+					end;
+				end;
+			end;	
+		end			
+		function InteractiveEntity:IsUsable(user)
+			if(self:GetState()~="Destroyed")then
+				return 1;
+			else
+				return 0;
+			end
+		end
+		function InteractiveEntity:GetUsableMessage(idx)
+			return "Order Drink"
+		end
+		for i, IE in pairs(System.GetEntitiesByClass("InteractiveEntity") or {}) do
+			IE.IsUsable = InteractiveEntity.IsUsable;
+			IE.GetUsableMessage = InteractiveEntity.GetUsableMessage;
+			IE.OnUsed = InteractiveEntity.OnUsed;
+			IE.Properties.OnUse = InteractiveEntity.Properties.OnUse;
+		end
+	]],
+	
 	PatchGUIs = [[
 		if(not GUI)then
 			Script.ReloadScript("Scripts/Entities/Others/GUI.lua");
@@ -819,17 +959,17 @@ local tbl = {
 			end
 		end
 	]],
-	
+		
 	PatchBuy = [[
 		function nCX:BL(o) 
 			local x=g_gameRules.buyList;
 			if (not x) then return end;
-			x.gauss.price = o and ]]..g_gameRules:GetPrice("gauss")..[[ or 600;
-			x.scargrenade.price = o and ]]..g_gameRules:GetPrice("scargrenade")..[[ or 20;
-			x.ustactank.price = o and ]]..g_gameRules:GetPrice("ustactank")..[[ or 750;
-			x.ussingtank.price = o and ]]..g_gameRules:GetPrice("ussingtank")..[[ or 800;
-			x.tacgun.price = o and ]]..g_gameRules:GetPrice("tacgun")..[[ or 500;
-			x.dsg1.price = o and ]]..g_gameRules:GetPrice("dsg1")..[[ or 200;
+			x.gauss.price = o and ]]..GetPrice("gauss")..[[ or 600;
+			x.scargrenade.price = o and ]]..GetPrice("scargrenade")..[[ or 20;
+			x.ustactank.price = o and ]]..GetPrice("ustactank")..[[ or 750;
+			x.ussingtank.price = o and ]]..GetPrice("ussingtank")..[[ or 800;
+			x.tacgun.price = o and ]]..GetPrice("tacgun")..[[ or 500;
+			x.dsg1.price = o and ]]..GetPrice("dsg1")..[[ or 200;
 			x.lockkit.name = o and "Lockpick & Defibrillator" or "@mp_eLockpick";
 		end
 		nCX:BL(true);
@@ -981,7 +1121,6 @@ local tbl = {
 				self:HideAllAttachments(0, hide, false);
 			end
 			if (nCX.Check)then nCX:Check(g_gameRules,System.GetFrameTime())end
-			if (nCX.Performance)then nCX:Performance()end
 		end
 		function g_localActor:UpdateScreenEffects(frameTime)
 		end
@@ -998,7 +1137,9 @@ local tbl = {
 				local x=hs and 2 or melee and 3 or 5;
 				HUD.ShowDeathFX(x);
 			end
-			if (nCX and nCX.OnKill) then
+			if (nCX and nCX.OnKill and pp) then
+				nCX.Ragdolls=nCX.Ragdolls or {};
+				nCX.Ragdolls[p]={};
 				nCX:OnKill(pp, s, melee, hs, type);
 			end
 		end

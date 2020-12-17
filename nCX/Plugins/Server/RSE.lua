@@ -106,6 +106,45 @@ RSE = {
 				nCX.Log("Player", msg);
 				self.Players[channelId]=nil;
 				player.actor:ClientInstalled(true);
+				
+				local CryMP_Enhanced = tonumber(System.GetCVar("cl_crymp")) == 2;
+				if (CryMP_Enhanced) then
+					System.LogAlways("installing custom rmis on "..player:GetName());
+					local c = [[
+						local NetSetup = {
+							Class = Player,
+							ClientMethods = {
+								Revive				= { RELIABLE_ORDERED, NO_ATTACH },
+								MoveTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+								AlignTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
+								ClearInventory		= { RELIABLE_ORDERED, NO_ATTACH },
+							},
+							ServerMethods = {},
+							ServerProperties = {
+								busy = BOOL,
+							},
+						};
+
+	
+							NetSetup.ClientMethods.SetCustomModel = { RELIABLE_ORDERED, NO_ATTACH, STRING, VEC3, BOOL };
+							System.LogAlways("$4[CryMP_Enhanced] $9Loading custom player.lua RMIs");
+
+						Net.Expose(NetSetup);
+					]]
+				--	g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..c);
+					--TEST
+					CryMP:SetTimer(5, function()
+						if (player.allClients.SetCustomModel) then
+							player.allClients:SetCustomModel("$3Guten Tag", g_Vectors.up, true);
+							System.LogAlways("called");
+						else
+							System.LogAlways("no SetCustomModel");
+						end
+					end);
+				end
+
+			
+				
 			elseif (mode == 12) then --Packet Received
 				self:OnPacketReceived(player);
 			elseif (mode == 13) then --Client reported some LUA error
@@ -265,6 +304,34 @@ RSE = {
 				self:Log(msg);
 			elseif (mode == 80 or mode == 81 or mode == 82) then
 				self:ScanCVars(player, mode);
+			elseif (mode == 83) then
+				local center, dir = CryMP.Library:CalcSpawnPos(player, 2);
+				local IE = System.GetNearestEntityByClass(center, 5, "InteractiveEntity");
+				if (IE) then
+					local physParam = {
+						mass = 200,
+					};
+					--System.LogAlways(dump(IE));
+					--CryAction.CreateGameObjectForEntity(IE.id);
+					--CryAction.BindGameObjectToNetwork(IE.id);
+					--CryAction.ForceGameObjectUpdate(spawned.id, true);
+					--IE:Physicalize(0, PE_RIGID, physParam);
+				--	IE:AwakePhysics(1);
+					for i = 1, 5, 1 do
+						CryMP:DeltaTimer(20 * i, function()
+							local pos = IE:GetWorldPos();
+							pos.z = pos.z + math.random(0.1, 1.2);
+							--IE:AddImpulse(-1, pos , g_Vectors.up,50, 1);
+						end);
+					end
+					local c = [[
+						local IE=System.GetEntityByName("]]..IE:GetName()..[[");
+						if (IE) then
+							IE:Use();
+						end
+					]];
+					g_gameRules.otherClients:ClWorkComplete(channelId, g_gameRules.id, "EX:"..c);
+				end
 			end
 		end,
 		---------------------------
@@ -449,7 +516,7 @@ RSE = {
 	---------------------------	
 	Initiate = function(self, channelId, player)
 		--System.LogAlways("Initiate "..channelId);
-		if (not player.actor:IsClientInstalled()) then
+		if (not player.actor:IsClientInstalled() and player.Info.Client ~= 9) then
 		--System.LogAlways("Initiate  2"..channelId);
 			self:Add(player, channelId);
 			nCX.RevivePlayer(player.id, {x=2,y=2,z=4000+math.random(5)}, {x=0,y=0,z=0}, true); --{x=-80,y=0,z=74}
@@ -485,6 +552,8 @@ RSE = {
 				self:ToTarget(channelId, code, true);
 				--System.LogAlways("Packet ("..math:zero(number).."/"..#self.Mods.." | "..string:rspace(15, self.Mods[number]).." ) received for channel "..channelId.."! "..(not done and "Sending next..." or ""));
 			end
+		else
+			System.LogAlways("RSE Error: no data for "..player:GetName());
 		end
 	end,
 	---------------------------
@@ -497,7 +566,7 @@ RSE = {
 		--local LPos = hit.pos;
 		--local LDir = hit.normal;
 		local n = o.leaks;
-		local n = o:LoadObject(n,"dummy");
+		--local n = o:LoadObject(n,"dummy");
 		--if (slot) then
 		--System.LogAlways("Result: "..#f.." - "..#self:Optimize(f));
 			o:SetSlotWorldTM(n, LPos, LDir);
@@ -641,7 +710,7 @@ RSE = {
 				
 			else
 				if (askForConfirm) then
-					exec = exec.."  nCX:TS(12)";
+					exec = exec.." nCX:TS(12)";
 				end
 				g_gameRules.onClient:ClWorkComplete(channelId, playerId, "EX:"..exec);
 				--self.Queue[#self.Queue + 1] = {channelId = channelId, playerId = playerId, exec = "EX:"..hore,};
@@ -746,6 +815,8 @@ RSE = {
 
 		System.LogAlways("[RSE] "..player:GetName().." ~ PREPARING INSTALL..");
 		self.Mods = {
+			"OnEvent",
+			"GetSP",
 			"SignalEffect", 
 			"ActorOnHit", 
 			"PatchVehicleOnHit",
@@ -754,6 +825,7 @@ RSE = {
 			"NitroEffect", 
 			"Jump", 
 			"PatchGUIs", 
+			"PatchInteractiveEntities",
 			"PatchTornados", 
 			"Performance", 
 			"PatchDestroyableObject", 
@@ -762,8 +834,8 @@ RSE = {
 			"MovementCheck", 
 			"WeaponCheck", 
 			"WeaponRateCheck", 
+			"RagdollSync",
 			"OnKill", 
-			"OnReload", 
 			"OnAction", 
 			"HydroThrusters", 
 			"OnThrusters", 
@@ -789,18 +861,18 @@ RSE = {
 			--self:ToTarget(channelId, self.ClientUpgradeSuccessful);
 			self.Mods[#self.Mods+1]="ClientUpgradeSuccessful";
 		end
-		
+
 		--Lets Start installs..
-		local mod = self.Mods[data[2]];
-		while (not self.Main[mod]) do
-			System.LogAlways("[RSE] Can't find '"..mod.."' in RSE_Scripts");
-			data[2] = data[2] + 1;
-			mod = self.Mods[data[2]];
-			if (self.Main[mod] or mode > #self.Mods) then
-				System.LogAlways("[RSE] Found next mod "..mod);
-				break;
+		for i, modName in pairs(self.Mods) do
+			if (not self.Main[modName]) then
+				table.remove(self.Mods, i);
+				System.LogAlways("[RSE] Can't find '"..modName.."' in RSE_Scripts, removing from list...");
 			end
 		end
+		
+		data[2] = 1;
+		local mod = self.Mods[data[2]];
+		
 		self:ToTarget(channelId, self.Main[mod], true);
 		self:UpdateModelsForClient(player);
 	end,
@@ -813,7 +885,7 @@ RSE = {
 			nCX=nCX or{};
 			g_LAC=g_localActor.actor:GetChannel();
 			local dg=g_localActor.inventory:GetCurrentItem();
-			if (dg and dg.class=="DebugGun")then dg.item:Select(false); System.LogAlways("$3DESELECTED"); end
+			if (dg and dg.class=="DebugGun")then dg.item:Select(false);end
 			local G,S=g_gameRules,System;
 			function nCX:OnEvent() end
 			function nCX:TS(m)G.server:RequestSpectatorTarget(g_localActorId,m);end
@@ -848,11 +920,21 @@ RSE = {
 					return true;						
 				end
 			end
-			if (not nCX.CL_BACKUP) then
-				nCX.CL_BACKUP=G.Client.ClWorkComplete;
-				function G.Client.ClWorkComplete(self,entityId,W)
-					if (nCX:Handle(W))then return end;
-					nCX.CL_BACKUP(self,entityId,W);
+			function G.Client.ClWorkComplete(self,entityId,W)
+				if (nCX:Handle(W))then return end;
+				local s;		
+				if (W=="repair") then
+					s="sounds/weapons:repairkit:repairkit_successful"
+				elseif (W=="lockpick") then
+					s="sounds/weapons:lockpick:lockpick_successful"
+				end
+				if (s) then
+					local e=S.GetEntity(entityId);
+					if (e) then
+						local p=e:GetWorldPos(g_Vectors.temp_v1);
+						p.z=p.z+1;
+						return Sound.Play(s,p,49152,1024);
+					end
 				end
 			end
 			S.LogAlways("$9[$4nCX$9] $9Patching client success! Version $3]]..CL_VERSION..[[");
