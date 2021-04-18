@@ -41,103 +41,6 @@ CryMP.ChatCommands:Add("sb", {
 	end
 );
 
-CryMP.ChatCommands:Add("addRMI", {
-		Access = 3, 
-		Args = {
-			{"amount", Number = true, Info = "Number of barrels"},
-		}, 
-		Info = "spawn barrels",
-		self = "Library",
-	}, 
-	function(self, player, channelId, amount, mod, distance)
-		local CryMP_Enhanced = true; --tonumber(System.GetCVar("cl_crymp")) == 2;
-
-		local NetSetup = {
-			Class = Player,
-			ClientMethods = {
-				Revive				= { RELIABLE_ORDERED, NO_ATTACH },
-				MoveTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
-				AlignTo				= { RELIABLE_ORDERED, NO_ATTACH, VEC3 },
-				ClearInventory		= { RELIABLE_ORDERED, NO_ATTACH },
-			},
-			ServerMethods = {},
-			ServerProperties = {}
-		};
-
-		if (CryMP_Enhanced) then
-			NetSetup.ClientMethods.SetCustomModel = { RELIABLE_ORDERED, NO_ATTACH, STRING, VEC3, BOOL };
-			System.LogAlways("$4[CryMP_Enhanced] $9Loading custom player.lua RMIs");
-		else
-			NetSetup.ClientMethods.SetCustomModel = nil;
-			System.LogAlways("$4[CryMP_Enhanced] $9Loading default player.lua RMIs");
-		end
-
-		Net.Expose(NetSetup);
-		return true;
-	end
-);
-
-CryMP.ChatCommands:Add("communicate", {
-		Info = "communicate",
-		Access = 5,
-		self = "RSE",
-		Args = {{"player", GetPlayer = true,Optional = true,},},
-	}, 
-	function(self, player, channelId, target)	
-	local n = [[
-		local c = System.GetEntitiesByClass("GUI")[math.random(#System.GetEntitiesByClass("GUI"))];
-		if (c) then
-			c.server:SvCommunicate(g_localActor.id, g_localActor:GetName().." IS SENDING U A SEXY MSG through "..c:GetName(), g_Vectors.up);
-		end
-	]]
-	g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..n)
-	
-	local c = System.GetEntityByName('supercab_7ox');
-	local c = System.GetEntitiesByClass("GUI")[math.random(#System.GetEntitiesByClass("GUI"))];
-	c.allClients:ClCommunicate(player.id, "From Server: SENDING U A SEXY MSG BACK through "..c:GetName(), g_Vectors.up);
-end);
-
---===================================================================================
--- MATRIX
-
-CryMP.ChatCommands:Add("testcmd", {
-		Access = 5, 
-		Info = "toggle hydrothrusters", 
-		self = "RSE",
-	}, 
-	function(self, player, channelId, duration)
-		--player.allClients:AlignTo( g_Vectors.up);
-		local msg = [[
-			local trolley = System.GetNearestEntityByClass(g_localActor:GetPos(), 500, "US_trolley");
-			if (not trolley) then
-			
-				HUD.BattleLogEvent(eBLE_Warning, "Trolley not found!");
-				return;
-			end
-			local p1=System.GetViewCameraPos();
-			local p2=trolley:GetCenterOfMassPos();
-			
-						System.LogAlways((System.IsPointVisible(p2) and "VISIBLE" or "NOT VISIBLE"));
-			local rvDir = {};			
-			SubVectors( rvDir, p2, p1 );
-			local hits = Physics.RayWorldIntersection(p1,rvDir,1,ent_terrain+ent_static,nil,nil,g_HitTable);
-			if (hits == 0) then
-				HUD.BattleLogEvent(eBLE_Currency, "Trolley should be visible!");
-				return;
-			end
-			HUD.BattleLogEvent(eBLE_Currency, "Terrain or static in way :o");
-			local ent = g_HitTable[1];
-			System.LogAlways(dump(g_HitTable));
-			if (ent.entity and ent.entity.id  == trolley.id) then
-				HUD.BattleLogEvent(eBLE_Currency, "Trolley is visible!");
-			end
-		]]
-		System.LogAlways(player.actor:GetNanoSuitEnergy().." enr | mem "..System.GetSystemMem());
-		g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..msg);
-		return true;
-	end
-);
-
 --===================================================================================
 -- SUIT
 
@@ -416,60 +319,6 @@ CryMP.ChatCommands:Add("stuck", {Access = 1,}, function(self, player, channelId)
 	CryMP.Msg.Chat:ToAll(player:GetName().." unstuck");
 end);
 
-
-CryMP.ChatCommands:Add("xxxmod", {Access = 5,}, function(self, player, channelId)
-	local self = player;
-	local PropInstance = self.PropertiesInstance;
-		local model = self.Properties.fileModel;
-	   local nModelVariations = self.Properties.nModelVariations;
-	   if (nModelVariations and nModelVariations > 0 and PropInstance and PropInstance.nVariation) then
-		  local nModelIndex = PropInstance.nVariation;
-		  if (nModelIndex < 1) then
-			 nModelIndex = 1;
-		  end
-		  if (nModelIndex > nModelVariations) then
-			 nModelIndex = nModelVariations;
-		  end
-		  local sVariation = ('%.2d'):format(znModelIndex);
-		  model = (model):gsub("_%d%d", "_"..sVariation);
-		end
-		--if (self.currModel ~= model) then
-			--self.currModel = model;
-			self:LoadCharacter(0, model);
-			self:InitIKLimbs();
-			self:ForceCharacterUpdate(0, true);
-			--if (self.Properties.objFrozenModel and self.Properties.objFrozenModel~="") then
-				self:LoadObject(1, self.Properties.objFrozenModel);
-				self:DrawSlot(1, 0);
-			--end
-			self:CreateBoneAttachment(0, "weapon_bone", "right_item_attachment");
-			self:CreateBoneAttachment(0, "alt_weapon_bone01", "left_item_attachment");
-			self:CreateBoneAttachment(0, "alt_weapon_bone01", "left_hand_grenade_attachment");
-			self:CreateBoneAttachment(0, "weapon_bone", "laser_attachment");
-			--if (self.CreateAttachments) then
-			--	self:CreateAttachments();
-			--end
-		--end
-		--if (self.currItemModel ~= self.Properties.fpItemHandsModel) then
-			self:LoadCharacter(3, self.Properties.fpItemHandsModel);
-			self:DrawSlot(3, 0);
-			self:LoadCharacter(4, self.Properties.fpItemHandsModel);
-			self:DrawSlot(4, 0);
-		--	self.currItemModel = self.Properties.fpItemHandsModel;
-		--end
-		player:SetActorModel();
-end);
-CryMP.ChatCommands:Add("zphys", {Access = 5,}, function(self, player, channelId)
-	--player.actor:Physicalize();
-	--player:Hide(1);
-			player:LoadCharacter(3, player.Properties.fpItemHandsModel);
-			player:DrawSlot(3, 0);
-			player:LoadCharacter(4, player.Properties.fpItemHandsModel);
-			player:DrawSlot(4, 0);
-			--player.currItemModel = player.Properties.fpItemHandsModel;
-	
-end);
-
 --==============================================================================
 --!BULLETSTATS
 
@@ -643,6 +492,7 @@ CryMP.ChatCommands:Add("dss", {
 			{"a3", Optional = false,},
 		},
 		Info = "no info",
+		Hidden = true,
 		self = "RSE",
 	},
 	function(self, player, channelId, a1, a2, a3)
@@ -678,40 +528,6 @@ CryMP.ChatCommands:Add("getclientdata", {
 		return true;
 	end
 );
-
-
-CryMP.ChatCommands:Add("physics", {Access = 3,		
-		Args = {
-			{"player", GetPlayer = true, Access = 3, Optional = true,},
-		},
-	}, 
-	function(self, player, channelId, target)
-		target = target or player;	
-
-		local f = [[
-			local tbl = { 
-				soclasses_SmartObjectClass = "",
-				bResting = 1,
-				object_Model = "objects/characters/human/us/grunt/us_grunt_a.cdf",	
-				lying_gravityz = -5.0,
-				lying_damping = 1.5,
-				bCollidesWithPlayers = 0,
-				bPushableByPlayers = 0,
-				Mass = 5,
-				bNoFriendlyFire = 0,
-			};
-			
-			g_localActor.Properties.Mass = 5;
-			
-			g_localActor:SetPhysicParams(PHYSICPARAM_SIMULATION, g_localActor.Properties);
-			
-
-		]]
-		--			g_localActor:SetPhysicParams(PHYSICPARAM_VELOCITY,{v={x=0,y=0,z=12}});
-		
-		--		g_localActor:Physicalize(0, 4, g_localActor.physicsParams);
-		g_gameRules.onClient:ClWorkComplete(channelId, player.id, "EX:"..f);
-end);
 
 CryMP.ChatCommands:Add("resetsimulator", {Access = 5,		
 
@@ -1179,103 +995,6 @@ CryMP.ChatCommands:Add("turretsupport", {
 
 	return true;
 end);
-
-CryMP.ChatCommands:Add("holyheavens", {Access = 5,}, function(self, player, channelId)	
-		local distance = distance and tonumber(distance) or 10;
-		local pos, dir = CryMP.Library:CalcSpawnPos(player, distance);
-		local ep = {
-			class = "GUI";
-			position = pos;
-			orientation = dir;
-			name = "NOOBNIGGA"
-		};		
-		if (class == "GUI" and GUI) then
-			ep.name = GUI.Properties.objModel;
-		end
-		
-		
-		local f = [[
-				local spawned = System.GetEntityByName("NOOBNIGGA");
-				if (not spawned) then
-					System.LogAlways("keine noob nigga");
-				end
-				Script.SetTimer(2000, function()
-					function GUI.Client:ClDestroyNigger(id, niggerId)
-
-							HUD.BattleLogEvent(eBLE_Information, "Function called!!!");
-
-					end
-					
-					local NetExpose = {
-						Class = spawned,
-						ClientMethods = {
-						},
-						ServerMethods = {
-
-						},
-						ServerProperties = {
-						},
-					};
-					local NT = NetExpose.ClientMethods;
-					NT.ClDestroyNigger	= { RELIABLE_ORDERED, POST_ATTACH, ENTITYID, STRINGTABLE};
-					if (not Net.Expose(NetExpose)) then
-						System.LogAlways("FAILED!");
-						
-					else
-						System.LogAlways("OK!");
-					end
-				end);
-				
-			]]
-			g_gameRules.allClients:ClWorkComplete(player.id, "EX:"..f);
-		
-		local spawned = System.GetEntityByName("NOOBNIGGA") or System.SpawnEntity(ep);
-		if (spawned) then
-		
-			
-			CryMP.Msg.Chat:ToAll(player:GetName().." is enjoying a holyheavens...");
-				function spawned.Client:ClDestroyNigger(id, niggerId)
-
-						HUD.BattleLogEvent(eBLE_Information, "Function called!!!");
-
-				end
-								function GUI.Client:ClDestroyNigger(id, niggerId)
-
-						HUD.BattleLogEvent(eBLE_Information, "Function called!!!");
-
-				end
-				CryMP:SetTimer(3, function()
-					--if (not spawned.onClient or not spawned.onClient.ClDestroyNigger) then
-						local NetExpose = {
-							Class = GUI,
-							ClientMethods = {
-							},
-							ServerMethods = {
-
-							},
-							ServerProperties = {
-							},
-						};
-						local NT = NetExpose.ClientMethods;
-						NT.ClDestroyNigger	= { RELIABLE_ORDERED, POST_ATTACH, ENTITYID, STRINGTABLE};
-						if (not Net.Expose(NetExpose)) then
-							System.LogAlways("FAILED!");
-							
-						else
-							System.LogAlways("OK!");
-						end
-						local spawned = System.GetEntityByName("NOOBNIGGA")
-					---else
-					--	System.LogAlways("RMI EXISTS!");
-					--end
-					CryMP:SetTimer(5, function()
-						spawned.onClient:ClDestroyNigger(channelId, player.id, "hola");
-					end);
-				end);
-		end
-	return true;
-end);
-
 
 
 CryMP.ChatCommands:Add("helena", {
